@@ -26,8 +26,9 @@ import { ElMessage } from "element-plus";
 import { SignalR } from '@/stores/SignalR'
 import HeaderIndex from '@/components/HeaderIndex.vue'
 import type { UserDTO } from "@/controller";
-import { UserClient } from '@/controller'
+import { UserClient, LoginClient } from '@/controller'
 const router = useRouter()
+const lo = new LoginClient()
 watch(() => MenuIndex().index,
     () => {
         router.push({
@@ -35,17 +36,20 @@ watch(() => MenuIndex().index,
         })
     });
 onMounted(async () => {
-    await SignalR().Build()
-    SignalR().conn.on('ReceiveMessage', data => {
-        ElMessage.info(data)
-    });
-    SignalR().conn.on('SendBack', data => {
-        ElMessage.info(data)
+    await lo.islogin().then(async () => {
+        await SignalR().Build()
+        SignalR().conn.on('ReceiveMessage', data => {
+            ElMessage.info(data)
+        });
+        SignalR().conn.on('SendBack', data => {
+            ElMessage.info(data)
+        })
+        SignalR().conn.on('NewLike', data => {
+            ElMessage(data)
+        })
+        SignalR().conn.start();
     })
-    SignalR().conn.on('NewLike', data => {
-        ElMessage(data)
-    })
-    SignalR().conn.start();
+
 
 })
 const info = ref<UserDTO>({})
@@ -53,7 +57,6 @@ const Send = () => {
     SignalR().conn.send('SendOne', '20010604', '456789')
 }
 onBeforeMount(async () => {
-
     info.value = (await new UserClient().getUserByJwt()).data
 })
 

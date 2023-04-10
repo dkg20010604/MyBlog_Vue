@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { LoginClient } from '@/controller'
+import { Login, Next } from '@icon-park/vue-next'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,7 +29,8 @@ const router = createRouter({
         {
           path: '/article/:id',
           component: () => import('@/page/ViewArticlePage.vue'),
-          name: 'viewpage'
+          name: 'viewpage',
+
         },
         {
           path: '/search',
@@ -40,19 +43,44 @@ const router = createRouter({
           name: 'setting'
         }
       ]
+    },
+    {
+      path: '/404',
+      component: () => import('@/errorPage/404.vue'),
+      name: '404'
+    },
+    {
+      path: '/500',
+      component: () => import('@/errorPage/500.vue'),
+      name: '500'
+    },
+    {
+      path: '/401',
+      component: () => import('@/errorPage/401.vue'),
+      name: '401'
+    },
+    {
+      path: '/error',
+      component: () => import('@/errorPage/Error.vue'),
+      name: 'error'
     }
-    // {
-    //   path:'/404',
-    //   component:''
-    // },
-    // {
-    //   path:'/500',
-
-    // }
   ]
 })
 router.beforeEach(async to => {
-  console.log(to.name);
-
+  // console.log(to.name);
+  const l = new LoginClient()
+  l.islogin().then(res => {
+    if (res) {
+      l.isAllow(to.name?.toString()).then(data=>{
+        if(data.data){
+          
+        }
+      })
+    }
+  }).catch((err)=>{
+    console.log(err);
+    
+    router.replace('')
+  })
 })
 export default router

@@ -8,9 +8,7 @@
                     <el-button type="danger" size="default" @click="clear">清空输入</el-button>
                 </el-button-group>
                 <el-button class="settingtag" type="text" @click="showtag = true">设置标签</el-button>
-
             </div>
-
         </div>
         <hr width="100%">
         <hr style="float: left;margin-left: -14px;" size="30px" width="10px" color="#59D861">
@@ -50,10 +48,12 @@
             :destroy-on-close="true" :show-close="true" :wrapperClosable="true">
             <el-autocomplete v-on:select="selecttag" value-key="tagName" v-model="tagtext" :fetch-suggestions="SearchTag"
                 placeholder="Please input" />
-            <el-button type="primary" size="default" @click="tags?.push()">添加标签</el-button>
+            <el-button type="primary" size="default" @click="addtags">添加标签</el-button>
 
-            <div>
-                <el-tag v-for="tag in tags" size="large" closable @close="">{{ tag.tagName }}</el-tag>
+            <div style="margin-top: 40px;">
+                <el-tag style="margin-left: 20px;" v-for="tag in tags" size="large" closable
+                    @close="tags.splice(tags.indexOf(tag), 1)">{{ tag.tagName
+                    }}</el-tag>
             </div>
             <template #footer>
                 <div style="flex: auto">
@@ -62,7 +62,6 @@
                 </div>
             </template>
         </el-drawer>
-
     </div>
 </template>
     
@@ -84,14 +83,28 @@ const SearchTag = (queryString: string, cb: (arg: any) => void) => {
     }, 300);
 }
 const selecttag = (item: TagDTO | any) => {
-    console.log(item);
-    
-    tags.value?.push(item)
+    if (tags.value.find(f => f.id == item.id)) {
+        return;
+    }
+    tags.value.push({
+        id: item.id,
+        tagName: item.tagName
+    })
     console.log(tags.value);
-
 }
 const savetag = () => {
+    articleInfo.tags = tags.value
     showtag.value = false
+    ElMessage.success('保存成功')
+}
+const addtags = () => {
+    if (tags.value.find(f => f.tagName == tagtext.value)) {
+        return;
+    }
+    tags.value.push({
+        id: undefined,
+        tagName: tagtext.value
+    })
 }
 const showDrawer = ref(false)
 const showtag = ref(false);
@@ -122,7 +135,7 @@ const articleInfo = reactive<ArticleDTO>({
     detail: '',
 })
 const tagtext = ref('')
-const tags = ref<TagDTO[]>()
+const tags = ref<TagDTO[]>([])
 const releaseArticle = async (status: number) => {
     articleInfo.status = status;
     articleInfo.tags = tags.value
@@ -132,6 +145,7 @@ const releaseArticle = async (status: number) => {
         })
         if (res) {
             ElMessage.success("成功")
+            articleInfo.id = res
         }
     }
     else {
@@ -162,6 +176,8 @@ const select = (a: ArticleDTO) => {
     articleInfo.detail = a.detail;
     articleInfo.userId = a.userId;
     showDrawer.value = false;
+    articleInfo.tags = a.tags
+    tags.value = JSON.parse(JSON.stringify(articleInfo.tags)) as TagInfo[];
     console.log(articleInfo.id);
 }
 const clear = () => {

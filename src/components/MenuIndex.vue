@@ -38,7 +38,6 @@ const handleClose = (key: string, keyPath: string[]) => {
 
 const menuSelect = (index: string) => {
   MenuIndex().SetMenu(index)
-
 }
 
 type menuitem = {

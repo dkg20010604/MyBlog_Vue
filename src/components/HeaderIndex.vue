@@ -37,8 +37,7 @@
                         <el-avatar style="display: flex;" :size="50" shape="circle" :src="headimg" fit="fill"></el-avatar>
                     </template>
                     <div class="userOperate">
-                        <el-button type="" @click="">注销</el-button>
-                        <el-button type="danger" @click="">注销</el-button>
+                        <el-button type="danger" @click="loginout">注销</el-button>
                     </div>
                 </el-popover>
 
@@ -50,13 +49,28 @@
 <script lang='ts' setup>
 import type { UserDTO } from '@/controller';
 import { PictureClient } from '@/controller'
-import { LocalTwo, People, Globe, Mail } from '@icon-park/vue-next'
+import { People, Globe, Mail } from '@icon-park/vue-next'
+import { useRouter } from 'vue-router'
+const Router = useRouter()
 const info = defineProps<{ User: UserDTO }>()
 const headimg = ref()
-
+const loginout = () => {
+    localStorage.clear()
+    Router.replace('/')
+}
 const a = '' as string
-onMounted(async () => {
-    headimg.value = URL.createObjectURL((await new PictureClient().getHeader()).data)
+onBeforeMount(async () => {
+    try {
+        new PictureClient().getHeader().then(res => {
+            headimg.value = URL.createObjectURL(res.data)
+        }).catch(() => {
+            Router.replace('/')
+        })
+    } catch (error) {
+        console.log(error);
+
+    }
+
 })
 </script>
     

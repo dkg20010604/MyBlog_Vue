@@ -101,7 +101,6 @@ VueMarkdownEditor.use(createHighlightLinesPlugin())
 
 const app = createApp(main)
 
-app.use(VMdEditor)
 app.use(VMdPreview);
 app.use(VueMarkdownEditor)
 

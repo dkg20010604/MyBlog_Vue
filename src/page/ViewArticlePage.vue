@@ -1,150 +1,126 @@
 <template>
   <div style="width: 99%;">
-    <AH :id="ArticleInfo?.userId as number"></AH>
+    <!-- 作者信息区 -->
+    <div style="display: flex;">
+
+      <ArticleHeader v-if="ArticleInfo.userId && isfollow != null" :id="ArticleInfo?.userId as number"
+        :isfollow="isfollow">
+      </ArticleHeader>
+    </div>
     <!-- 文档区 -->
-    <div>
+    <div style="z-index: 200;background-color:white;">
       <el-row :gutter="10">
         <!-- 目录部分 -->
         <el-col :xs="24" :sm="24" :md="8" :lg="4" class="MdMenu">
           <div>
-            <div :style="{
-              cursor: 'pointer',
-              padding: '0 0 5px 0',
-            }">
-              <div v-for="item in catalogue" :key="item" class="list-group-item"
-                :style="{ padding: `10px 0 10px ${item.indent * 20}px` }" @click="scrollTop(item)">
-                <a>{{ item.title }}</a>
+            <el-affix class="menus" target=".MdMenu" :offset="160">
+              <div v-for="anchor in catalogue" :style="{ padding: `10px 0 10px ${anchor.indent * 20}px` }"
+                @click="scrollTop(anchor)">
+                <a style="cursor: pointer;">{{ anchor.title }}</a>
               </div>
-            </div>
-            <div v-for="anchor in catalogue" :style="{ padding: `10px 0 10px ${anchor.indent * 20}px` }"
-              @click="scrollTop(anchor)">
-              <a style="cursor: pointer">{{ anchor.title }}</a>
-            </div>
+            </el-affix>
           </div>
-
-
         </el-col>
         <!-- md文件部分 -->
-        <el-col :xs="24" :sm="24" :md="16" :lg="20" :style="{
-          overflow: auto,
-        }" ref="scrollOut">
+        <el-col :xs="24" :sm="24" :md="16" :lg="20" style="overflow: auto" ref="scrollOut">
           <v-md-preview :text="ArticleInfo?.detail" ref="preview"></v-md-preview>
+          <el-tag style="margin-left: 50px;" v-for="tag in ArticleInfo?.tags" type="success" size="large" effect="dark"
+            @close="">{{ tag.tagName }}</el-tag>
+
         </el-col>
       </el-row>
     </div>
 
     <!-- 点赞数、收藏数 -->
-    <div class="Chart">
+    <div class="Chart" style="z-index: 500;background-color:white;">
       <div class="Chart-good">
-        <good-two class="icon-number" @click="good = !good" :theme="(good ? 'filled' : 'outline')" size="30"
+        <good-two class="icon-number" @click="goodclick" :theme="(good ? 'filled' : 'outline')" size="30"
           :fill="(good ? '#32a4e0' : '#000000')" :strokeWidth="3" />
-        <p class="font-number">{{ 20 }}</p>
+        <p class="font-number">{{ ArticleInfo.likeNumber }}</p>
       </div>
       <div class="Chart-star">
-        <star class="icon-number" @click="stars = !stars" :theme="(stars ? 'filled' : 'outline')" size="30"
+        <star class="icon-number" @click="starclick" :theme="(stars ? 'filled' : 'outline')" size="30"
           :fill="(stars ? '#32a4e0' : '#000000')" :strokeWidth="3" />
-        <p class="font-number">{{ 16 }}</p>
+        <p class="font-number">{{ ArticleInfo.collection }}</p>
       </div>
     </div>
 
     <!-- 发评论 -->
-    <div class="Recommen">
-      <el-input v-model="writerComment.commentText" placeholder="" size="default" clearable @change=""></el-input>
+
+    <div class="Recommen" style="z-index: 500;position: relative;background-color:white;">
+      <el-input v-model="writerComment.commentText" type="textarea" :show-word-limit="true" placeholder="写下你的评论"
+        size="default" :row="3" clearable @change=""></el-input>
+      <el-button style="margin-top: 8px;" type="primary" size="default" @click="sendcomment(false)">发送</el-button>
     </div>
     <!-- 看评论 -->
-    <CommentIndex :comments="comment"></CommentIndex>
+    <div style="z-index: 500;position: relative;background-color:white;">
+      <CommentIndex v-if="comment?.length as number > 0" :comments="comment as CommentDTO[]" />
+      <span class="com" v-else>还没有评论</span>
+    </div>
+
   </div>
 </template>
-
+  
 <script lang='ts' setup>
-import { nextTick, onMounted, reactive, ref, } from 'vue';
-import { ArticleClient, CommentClient, type ArticleDTO, type CommentDTO } from '@/controller'
+import { ArticleClient, CollectionAndLikeClient, FriendClient, CommentClient, type ArticleDTO, type CommentDTO } from '@/controller'
 import { GoodTwo, Star } from '@icon-park/vue-next'
+import { useRoute } from 'vue-router';
+import ArticleHeader from '@/components/ArticleHeader.vue'
 import CommentIndex from '@/components/CommentIndex.vue'
-import { auto } from '@popperjs/core';
-const AH = defineAsyncComponent(() =>
-  import('@/components/ArticleHeader.vue')
-)
+import { ElMessage } from 'element-plus';
+const art = new ArticleClient()
+const fir = new FriendClient();
+const comm = new CommentClient();
+const coll = new CollectionAndLikeClient()
+const route = useRoute()
+
 const writerComment = reactive<CommentDTO>({
-  userId: 0
+  userId: 0,
+  commentText: '',
 })
+// 发送评论按钮
+const sendcomment = async (IsResponse: boolean, responseid?: number) => {
+  writerComment.isResponse = IsResponse
+  if (IsResponse) {
+    writerComment.responseId = responseid
+  }
+  await comm.addComment(writerComment).then(data => {
+    if (data.code == 200) {
+      ElMessage.success('发送成功')
+      writerComment.commentText = ''
+    }
+    else {
+      ElMessage.error('发送失败')
+    }
+  })
+  await getcomment();
+
+}
+const ArticleInfo = ref<ArticleDTO>({})
+
+const isfollow = ref();
 const good = ref(false)
 const stars = ref(false)
-const art = new ArticleClient()
-const ArticleInfo = ref<ArticleDTO>()
+
+const artId = route.params.id as string as unknown as number;
 const preview = ref();
-const comment = [{
-  commend: 1,
-  articleId: 1,
-  userId: 7,
-  commentText: '不定宽块级元素的居中方法有三种：第一种是加入table标签；第二种是设置display:inline方法，与第一种类似，显示类型设为行内元素，进行不定宽元素的属性设置；第三种方法是设置position:relative和left:50%，利用相对定位的方式，将元素向左偏移50%用以实现居中的目的',
-  isResponse: false,
-  likeCount: 19,
-  status: 0,
-  releaseTime: new Date(),
-  children: [
-    {
-      commend: 2,
-      articleId: 1,
-      userId: 3,
-      commentText: '这是第一条评论的回复',
-      isResponse: true,
-      responseId: 1,
-      likeCount: 6,
-      status: 0,
-      releaseTime: new Date(),
-    },
-    {
-      commend: 2,
-      articleId: 1,
-      userId: 3,
-      commentText: '这是第一条评论的回复',
-      isResponse: true,
-      responseId: 1,
-      likeCount: 6,
-      status: 0,
-      releaseTime: new Date(),
-      children: [
-        {
-          commend: 2,
-          articleId: 1,
-          userId: 3,
-          commentText: '这是第一条评论的回复的回复',
-          isResponse: true,
-          responseId: 1,
-          likeCount: 6,
-          status: 0,
-          releaseTime: new Date(),
-          children: [
-            {
-              commend: 2,
-              articleId: 1,
-              userId: 3,
-              commentText: '这是第一条评论的回复的回复的回复',
-              isResponse: true,
-              responseId: 1,
-              likeCount: 6,
-              status: 0,
-              releaseTime: new Date(),
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}] as CommentDTO[]
+const comment = ref<CommentDTO[]>()
 onBeforeMount(async () => {
-  loadFile();
-  sHeight.value = window.screen.height - 320 + "px";
+  await getcomment();
 })
+const getcomment = async () => {
+  ArticleInfo.value = (await art.getById(artId)).data;
+  writerComment.articleId = artId
+  stars.value = (await coll.isCollection(ArticleInfo.value.id as number)).data as boolean
+  good.value = (await coll.islike(ArticleInfo.value.id as number)).data as boolean
+  await loadFile()
+  console.log(ArticleInfo.value);
+  isfollow.value = (await fir.isFollow(ArticleInfo.value.userId as number)).data
+  comment.value = (await comm.getComment(artId)).data
+}
 const catalogue: any = ref([]);
-const sHeight = ref("100px");
 
 const loadFile = async () => {
-  // 从接口获取文档内容，这部分省略了霍~
-  ArticleInfo.value = await (await art.getById(1)).data;
-
-  // 建目录
   await nextTick();
   const anchors = preview.value.$el.querySelectorAll("h1,h2,h3,h4,h5,h6");
 
@@ -182,17 +158,80 @@ const scrollTop = (anchor: any) => {
 
   if (heading) {
     heading.scrollIntoView();
-    // (preview.value.$el as HTMLElement).scrollBy({
-    //   target: heading,
-    //   scrollContainer: window,
-    //   top: 60,
-    // });
   }
 }
 const scrollOut = ref();
+
+//点赞按钮
+const goodclick = () => {
+  if (!good.value) {
+    coll.addlike(ArticleInfo.value.id as number).then(res => {
+      if (res.code == 200) {
+        ElMessage.success('点赞成功')
+        good.value = !good.value
+      }
+      else {
+        ElMessage.error(res.message)
+      }
+    }).catch(() => {
+      ElMessage.error('点赞失败')
+    })
+  }
+  else {
+    coll.voidlike(ArticleInfo.value.id as number).then(res => {
+      if (res.code == 200) {
+        ElMessage.success('取消点赞成功')
+        good.value = !good.value
+      }
+      else {
+        ElMessage.success(res.message)
+      }
+    }).catch(() => {
+      ElMessage.success('取消点赞失败')
+    })
+  }
+}
+
+//收藏按钮
+const starclick = () => {
+  if (!stars.value) {
+    coll.addCollect(ArticleInfo.value.id as number).then(res => {
+      if (res.code == 200) {
+        ElMessage.success('点赞成功')
+        stars.value = !stars.value
+      }
+      else {
+        ElMessage.error(res.message)
+      }
+    }).catch(() => {
+      ElMessage.error('取消点赞失败')
+    })
+  }
+  else {
+    coll.voidArt(ArticleInfo.value.id as number).then(res => {
+      if (res.code == 200) {
+        ElMessage.success('取消点赞成功')
+        stars.value = !stars.value
+      }
+      else {
+        ElMessage.error(res.message)
+      }
+    }).catch(() => {
+      ElMessage.error('取消点赞失败')
+    })
+  }
+}
+onMounted(async () => {
+
+})
 </script >
-  
+
+
 <style scoped>
+.MdMenu {
+  overflow: auto;
+}
+
 .ArtView {
   display: flex;
   align-items: center;
@@ -209,6 +248,7 @@ const scrollOut = ref();
 }
 
 .Chart {
+  position: relative;
   display: flex;
   margin: auto;
 }
@@ -233,5 +273,22 @@ const scrollOut = ref();
 
 .icon-number {
   margin: auto;
+}
+
+.Recommen {
+  padding: 10px;
+  margin-top: 8px;
+  z-index: 101;
+}
+
+.com {
+  margin: auto;
+  font-size: 20px;
+  font-style: normal;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.menus :hover {
+  background-color: rgb(154, 154, 154);
 }
 </style>
