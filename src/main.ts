@@ -1,11 +1,10 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
-import v3ImgPreview from 'v3-img-preview'
 import 'element-plus/dist/index.css'
 import '@icon-park/vue-next/styles/index.css'
 import main from '@/App.vue'
-
+import 'element-plus/theme-chalk/dark/css-vars.css'
 /**
  * MarkDown插件
  */
@@ -46,9 +45,6 @@ import createLineNumbertPlugin from '@kangc/v-md-editor/lib/plugins/line-number/
 import createHighlightLinesPlugin from '@kangc/v-md-editor/lib/plugins/highlight-lines/index';
 import '@kangc/v-md-editor/lib/plugins/highlight-lines/highlight-lines.css';
 
-//表情
-import createEmojiPlugin from '@kangc/v-md-editor/lib/plugins/emoji/index';
-import '@kangc/v-md-editor/lib/plugins/emoji/emoji.css';
 
 //列表
 import createTodoListPlugin from '@kangc/v-md-editor/lib/plugins/todo-list/index';
@@ -76,7 +72,6 @@ VMdPreview.use(githubTheme, {
 });
 VMdPreview.use(createTipPlugin())
 VMdPreview.use(createLineNumbertPlugin())
-VMdPreview.use(createEmojiPlugin())
 VMdPreview.use(createTodoListPlugin())
 VMdPreview.use(createCopyCodePlugin())
 VMdPreview.use(createAlignPlugin)
@@ -89,7 +84,6 @@ VueMarkdownEditor.use(githubTheme, {
 });
 VueMarkdownEditor.use(createTipPlugin())
 VueMarkdownEditor.use(createLineNumbertPlugin())
-VueMarkdownEditor.use(createEmojiPlugin())
 VueMarkdownEditor.use(createTodoListPlugin())
 VueMarkdownEditor.use(createCopyCodePlugin())
 VueMarkdownEditor.use(createAlignPlugin)
@@ -105,10 +99,5 @@ app.use(VMdPreview);
 app.use(VueMarkdownEditor)
 
 app.use(router)
-app.use(v3ImgPreview, {
-  keyboard: true,
-  escClose: true,
-  showToolbar: true
-})
 app.use(createPinia())
 app.mount('#app')

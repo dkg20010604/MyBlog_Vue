@@ -5,8 +5,9 @@
                 <Menu></Menu>
             </el-aside>
             <el-container>
-                <el-header style="height: auto;">
-                    <HeaderIndex :User="info"></HeaderIndex>
+                <el-header style="height: auto;z-index: 210;background-color: white;padding: 0;">
+                    <HeaderIndex :User="info">
+                    </HeaderIndex>
                 </el-header>
                 <hr color="red" size="1" style="width: 99%;">
                 <el-main class="main">
@@ -23,9 +24,9 @@ import Menu from '@/components/MenuIndex.vue';
 import { useRouter } from 'vue-router';
 import { onBeforeMount, onMounted, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
-import { SignalR } from '@/stores/SignalR'
+import { SignalR, type methodGroup } from '@/stores/SignalR'
 import HeaderIndex from '@/components/HeaderIndex.vue'
-import type { UserDTO } from "@/controller";
+import type { UserDTO, ChatDTO } from "@/controller";
 import { UserClient, LoginClient } from '@/controller'
 const router = useRouter()
 const lo = new LoginClient()
@@ -36,30 +37,47 @@ watch(() => MenuIndex().index,
         })
     });
 onMounted(async () => {
-    await lo.islogin().then(async () => {
-        await SignalR().Build()
-        SignalR().conn.on('ReceiveMessage', data => {
-            ElMessage.info(data)
-        });
-        SignalR().conn.on('SendBack', data => {
-            ElMessage.info(data)
+    const meth: methodGroup[] = [
+        {
+            method: (data) => {
+                ElMessage.info(data)
+            },
+            name: 'ReceiveMessage'
+        },
+        {
+            name: 'SendBack',
+            method: data => {
+                ElMessage.info(data)
+            }
+        },
+        {
+            name: 'NewLike',
+            method: data => {
+                ElMessage(data)
+            }
+        },
+        {
+            name: 'newcollection',
+            method: data => {
+                ElMessage.info(data)
+            }
+        }
+    ]
+    await lo.islogin().then(async (res) => {
+        console.log(res);
+        SignalR().Build()
+        meth.forEach(item => {
+            SignalR().conn.on(item.name, item.method)
         })
-        SignalR().conn.on('NewLike', data => {
-            ElMessage(data)
-        })
-        SignalR().conn.start();
+        await SignalR().conn.start()
     })
-
-
 })
-const info = ref<UserDTO>({})
-const Send = () => {
-    SignalR().conn.send('SendOne', '20010604', '456789')
-}
+const info = ref<UserDTO>({ nickName: '' })
 onBeforeMount(async () => {
     info.value = (await new UserClient().getUserByJwt()).data
-})
+    MenuIndex().userinfo = info.value;
 
+})
 </script>
 
 <style scoped>
@@ -74,7 +92,6 @@ onBeforeMount(async () => {
 }
 
 .main {
-    height: 100vh;
     margin: 0;
     padding: 0;
 }

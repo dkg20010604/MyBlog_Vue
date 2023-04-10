@@ -1,6 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { LoginClient } from '@/controller'
-import { Login, Next } from '@icon-park/vue-next'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +39,26 @@ const router = createRouter({
           path: '/settings',
           component: () => import('@/page/SettingsPage.vue'),
           name: 'setting'
+        },
+        {
+          path: '/picture',
+          component: () => import('@/page/PictureGroup.vue'),
+          name: 'picture',
+        },
+        {
+          path: '/group/:id',
+          component: () => import('@/page/ViewPicture.vue'),
+          name: 'viewpicture'
+        },
+        {
+          path: '/chat',
+          component: () => import('@/page/Chat.vue'),
+          name: 'chat'
+        },
+        {
+          path: '/searchuser',
+          component: () => import('@/page/SearchUser.vue'),
+          name: 'searchuser'
         }
       ]
     },
@@ -66,21 +84,21 @@ const router = createRouter({
     }
   ]
 })
-router.beforeEach(async to => {
-  // console.log(to.name);
-  const l = new LoginClient()
-  l.islogin().then(res => {
-    if (res) {
-      l.isAllow(to.name?.toString()).then(data=>{
-        if(data.data){
-          
-        }
-      })
-    }
-  }).catch((err)=>{
-    console.log(err);
-    
-    router.replace('')
-  })
-})
+// router.beforeEach(async to => {
+//   // console.log(to.name);
+//   const l = new LoginClient()
+//   l.islogin().then(res => {
+//     if (res) {
+//       l.isAllow(to.name?.toString()).then(data => {
+//         if (data.data) {
+
+//         }
+//       })
+//     }
+//   }).catch((err) => {
+//     console.log(err);
+
+//     router.replace('')
+//   })
+// })
 export default router

@@ -4,7 +4,7 @@
             <el-card shadow="hover" :body-style="{ padding: '20px' }">
                 <div class="cardbody">
                     <div class="bodyicon">
-                        <book theme="two-tone" size="60" :fill="['#000000', '#ee410c']" :strokeWidth="2" />
+                        <notebook-one theme="two-tone" size="60" :fill="['#929292', '#ee410c']" :strokeWidth="3" />
                     </div>
                     <div class="bodyinfo">
                         <span class="infoname">文章量</span>
@@ -18,7 +18,7 @@
             <el-card shadow="hover" :body-style="{ padding: '20px' }">
                 <div class="cardbody">
                     <div class="bodyicon">
-                        <topic theme="two-tone" size="60" :fill="['#000000', '#ee410c']" :strokeWidth="2" />
+                        <topic theme="two-tone" size="60" :fill="['#929292', '#ee410c']" :strokeWidth="2" />
                     </div>
                     <div class="bodyinfo">
                         <span class="infoname">评论量</span>
@@ -50,12 +50,15 @@
 <script lang="ts" setup>
 import { SignalR } from '@/stores/SignalR'
 import * as echarts from 'echarts';
-import { Book, Topic } from '@icon-park/vue-next'
+import { NotebookOne, Topic } from '@icon-park/vue-next'
 import type { EChartsType } from 'echarts';
 import { UserClient } from '@/controller'
 import { useRouter } from 'vue-router';
 const signalr = SignalR().conn;
 const viewoption = {
+    title: {
+        text: '您最受欢迎的文章'
+    },
     xAxis: {
         type: 'category',
         data: []
@@ -130,26 +133,20 @@ const getnum = async () => {
     res?.forEach(item => {
         if (i == 0) {
             for (let o in item) {
-                console.log(o + item[o]);
                 viewoption.xAxis.data.push(o as never)
-                console.log(viewoption.xAxis.data);
                 viewoption.series[0].data.push(item[o] as never)
             }
         }
         else {
             for (let o in item) {
-                console.log(o + item[o]);
                 goodoption.series[0].data.push({
                     value: item[o],
                     name: o
                 } as never)
             }
         }
-
-
         i++;
     })
-    console.log(viewoption);
     viewlist.value = echarts.init(document.getElementById('viewnumbercharts') as HTMLElement);
     typelist.value = echarts.init(document.getElementById('typelistcharts') as HTMLElement);
     viewlist.value.setOption(viewoption)
@@ -167,31 +164,25 @@ onBeforeMount(async () => {
     res.value?.forEach((item: { [x: string]: any; }) => {
         if (i == 0) {
             for (let o in item) {
-                console.log(o + item[o]);
                 viewoption.xAxis.data.push(o as never)
-                console.log(viewoption.xAxis.data);
                 viewoption.series[0].data.push(item[o] as never)
             }
         }
         else {
             for (let o in item) {
-                console.log(o + item[o]);
                 goodoption.series[0].data.push({
                     value: item[o],
                     name: o
                 } as never)
             }
         }
-
-
         i++;
     })
-    console.log(viewoption);
     viewlist.value = echarts.init(document.getElementById('viewnumbercharts') as HTMLElement);
     typelist.value = echarts.init(document.getElementById('typelistcharts') as HTMLElement);
     viewlist.value.setOption(viewoption)
     typelist.value.setOption(goodoption)
-    numb.value = (await userc.getArsComms()).data
+    numb.value = (await userc.getArsComms()).data as number[]
 
 })
 

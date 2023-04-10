@@ -20,7 +20,7 @@
             <el-button type="warning" @click="releaseArticle(1)">保存草稿</el-button>
         </div>
         <v-md-editor class="textdiv" v-model="articleInfo.detail" :disabled-menus="[]"
-            left-toolbar="undo redo clear | h bold italic strikethrough quote | tip emoji todo-list | ul ol table hr | link image code "
+            left-toolbar="undo redo clear | h bold italic strikethrough quote | tip todo-list | ul ol table hr | link image code "
             height="80%" @upload-image="UploadImage"></v-md-editor>
     </el-card>
     <div>
@@ -41,7 +41,6 @@
                 </el-card>
             </div>
         </el-drawer>
-
     </div>
     <div>
         <el-drawer title="设置标签" v-model="showtag" direction="rtl" size="30%" :before-close="tagclose"
@@ -133,6 +132,8 @@ const articleInfo = reactive<ArticleDTO>({
     id: undefined,
     title: '',
     detail: '',
+    collection: 0,
+    likeNumber: 0
 })
 const tagtext = ref('')
 const tags = ref<TagDTO[]>([])
@@ -161,10 +162,11 @@ const releaseArticle = async (status: number) => {
 const page = reactive<PageDataOfArticleDTO>({
     pageindex: 1,
     pageSize: 20,
+    data: []
 })
 const GetArticle = async () => {
     const res = await art.getArticle(page)
-    page.data = res.data?.data
+    page.data = res.data.data
     console.log(articleInfo.id);
     showDrawer.value = true;
 
@@ -200,9 +202,6 @@ const clear = () => {
     })
 
 }
-onMounted(() => {
-    //console.log('rticleInfo.id:' + articleInfo.id);
-})
 </script>
     
 <style scoped>

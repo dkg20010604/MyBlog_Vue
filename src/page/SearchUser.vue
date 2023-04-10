@@ -1,19 +1,18 @@
 <template>
     <div class="searchinput">
-        <el-input v-model="searchpage.data[0]" placeholder="输入要搜索的内容" size="large">
+        <el-input v-model="searchpage.data[0]" placeholder="输入用户名或账号" size="large">
             <template #append style="width: 20%;">
                 <div>
                     <el-button-group style="display: flex;">
-                        <el-button type="primary" round size="default" @click="searchTitle">搜索标题</el-button>
-                        <el-button type="primary" round size="default" @click="searchTag">搜索标签</el-button>
+                        <el-button type="primary" round size="default" @click="searchTitle">搜索</el-button>
                     </el-button-group>
                 </div>
             </template>
         </el-input>
     </div>
     <div class="reslist">
-        <el-card @click="clickcard(res.id as number)" v-for="res in articles" shadow="hover" :body-style="{ padding: 10 }"
-            class="cardlist">
+        <el-card @click="clickcard(res.id as number)" v-for="res in articles.data" shadow="hover"
+            :body-style="{ padding: 10 }" class="cardlist">
             <div class="cardinfo">
                 <div class="cardheader">
                     <p style="word-break: keep-all;overflow: hidden; text-overflow: ellipsis;">{{ res.title }}</p>
@@ -26,42 +25,42 @@
         </el-card>
     </div>
     <div class="page">
-        <el-pagination background layout="prev, pager, next" :page-size="searchpage.pageSize" :total="searchpage.total" />
+        <el-pagination background layout="prev, pager, next" :page-size="articles.pageSize" :total="articles.total" />
     </div>
 </template>
     
 <script lang='ts' setup>
-import type { ArticleDTO } from '@/controller'
+import type { PageDataOfArticleDTO, PageDataOfString } from '@/controller'
 import { ArticleClient } from '@/controller'
-import { useRouter } from 'vue-router'
-import { MenuIndex } from '@/stores/MenuStore'
+import { useRouter, useRoute } from 'vue-router'
 const router = useRouter();
-const searchpage = MenuIndex().queryArticleString
+const route = useRoute();
 const searchclient = new ArticleClient()
-const articles = reactive<ArticleDTO[]>([])
-const querybytitle = ref(true)
+const articles = reactive<PageDataOfArticleDTO>({
+    pageindex: 1,
+    pageSize: 20,
+    total: 0,
+    data: []
+})
+const searchpage = reactive<PageDataOfString>({
+    pageindex: 1,
+    pageSize: 20,
+    data: ['']
+})
 const searchTitle = () => {
-    articles.length = 0;
+    articles.data.length = 0;
     searchclient.searchArticle(searchpage).then(res => {
-        searchpage.pageindex = res.data.pageindex
-        searchpage.pageSize = res.data.pageSize
-        searchpage.total = res.data.total
         res.data?.data?.forEach(a => {
-            articles.push(a);
+            articles.data.push(a);
         })
-        querybytitle.value = true;
     })
 }
 const searchTag = () => {
-    articles.length = 0;
+    articles.data.length = 0;
     searchclient.searchByTags(searchpage).then(res => {
-        searchpage.pageindex = res.pageindex
-        searchpage.pageSize = res.pageindex
-        searchpage.total = res.total
         res.data?.forEach(r => {
-            articles.push(r)
+            articles.data.push(r)
         })
-        querybytitle.value = false
     })
 }
 const clickcard = (id: number) => {
@@ -112,6 +111,8 @@ const clickcard = (id: number) => {
     justify-content: center;
 }
 
+.cardheader {}
+
 .restags {
     display: flex;
     flex-direction: row-reverse;
@@ -128,3 +129,4 @@ const clickcard = (id: number) => {
     font-kerning: 2px;
 }
 </style>
+    

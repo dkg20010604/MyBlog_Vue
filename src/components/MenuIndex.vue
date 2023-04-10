@@ -16,8 +16,20 @@
       </el-menu-item>
     </el-sub-menu>
     <el-menu-item index="searchartticle" key="">
-      <search theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+      <doc-search-two theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
       <span>搜索文章</span>
+    </el-menu-item>
+    <el-menu-item index="searchuser" key="">
+      <search theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+      <span>查找用户</span>
+    </el-menu-item>
+    <el-menu-item index="picture">
+      <picture-album theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+      <span>相册管理</span>
+    </el-menu-item>
+    <el-menu-item index="chat" key="">
+      <message-one theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+      <span>聊一聊</span>
     </el-menu-item>
     <el-menu-item index="setting" key="">
       <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
@@ -27,7 +39,7 @@
   </el-menu>
 </template>
 <script lang="ts" setup>
-import { TopicDiscussion, Home, Notes, Search, Config } from '@icon-park/vue-next';
+import { DocSearchTwo, TopicDiscussion, Home, Notes, Search, Config, PictureAlbum, MessageOne } from '@icon-park/vue-next';
 import { onBeforeMount } from 'vue';
 import { MenuIndex } from '@/stores/MenuStore'
 const handleOpen = (key: string, keyPath: string[]) => {

@@ -8,7 +8,7 @@
       </ArticleHeader>
     </div>
     <!-- 文档区 -->
-    <div style="z-index: 200;background-color:white;">
+    <div style="z-index: 200;">
       <el-row :gutter="10">
         <!-- 目录部分 -->
         <el-col :xs="24" :sm="24" :md="8" :lg="4" class="MdMenu">
@@ -32,28 +32,28 @@
     </div>
 
     <!-- 点赞数、收藏数 -->
-    <div class="Chart" style="z-index: 500;background-color:white;">
+    <div class="Chart" style="z-index: 500;">
       <div class="Chart-good">
         <good-two class="icon-number" @click="goodclick" :theme="(good ? 'filled' : 'outline')" size="30"
-          :fill="(good ? '#32a4e0' : '#000000')" :strokeWidth="3" />
+          :fill="(good ? '#32a4e0' : '#9aff63')" :strokeWidth="3" />
         <p class="font-number">{{ ArticleInfo.likeNumber }}</p>
       </div>
       <div class="Chart-star">
         <star class="icon-number" @click="starclick" :theme="(stars ? 'filled' : 'outline')" size="30"
-          :fill="(stars ? '#32a4e0' : '#000000')" :strokeWidth="3" />
+          :fill="(stars ? '#32a4e0' : '#9aff63')" :strokeWidth="3" />
         <p class="font-number">{{ ArticleInfo.collection }}</p>
       </div>
     </div>
 
     <!-- 发评论 -->
 
-    <div class="Recommen" style="z-index: 500;position: relative;background-color:white;">
+    <div class="Recommen" style="z-index: 500;position: relative;">
       <el-input v-model="writerComment.commentText" type="textarea" :show-word-limit="true" placeholder="写下你的评论"
         size="default" :row="3" clearable @change=""></el-input>
       <el-button style="margin-top: 8px;" type="primary" size="default" @click="sendcomment(false)">发送</el-button>
     </div>
     <!-- 看评论 -->
-    <div style="z-index: 500;position: relative;background-color:white;">
+    <div style="z-index: 500;position: relative;">
       <CommentIndex v-if="comment?.length as number > 0" :comments="comment as CommentDTO[]" />
       <span class="com" v-else>还没有评论</span>
     </div>
@@ -96,7 +96,7 @@ const sendcomment = async (IsResponse: boolean, responseid?: number) => {
   await getcomment();
 
 }
-const ArticleInfo = ref<ArticleDTO>({})
+const ArticleInfo = ref<ArticleDTO>({ likeNumber: 0, collection: 0 })
 
 const isfollow = ref();
 const good = ref(false)
@@ -114,7 +114,6 @@ const getcomment = async () => {
   stars.value = (await coll.isCollection(ArticleInfo.value.id as number)).data as boolean
   good.value = (await coll.islike(ArticleInfo.value.id as number)).data as boolean
   await loadFile()
-  console.log(ArticleInfo.value);
   isfollow.value = (await fir.isFollow(ArticleInfo.value.userId as number)).data
   comment.value = (await comm.getComment(artId)).data
 }
@@ -169,12 +168,14 @@ const goodclick = () => {
       if (res.code == 200) {
         ElMessage.success('点赞成功')
         good.value = !good.value
+        ArticleInfo.value.likeNumber++
       }
       else {
         ElMessage.error(res.message)
       }
     }).catch(() => {
       ElMessage.error('点赞失败')
+
     })
   }
   else {
@@ -182,6 +183,7 @@ const goodclick = () => {
       if (res.code == 200) {
         ElMessage.success('取消点赞成功')
         good.value = !good.value
+        ArticleInfo.value.likeNumber--
       }
       else {
         ElMessage.success(res.message)
@@ -197,27 +199,29 @@ const starclick = () => {
   if (!stars.value) {
     coll.addCollect(ArticleInfo.value.id as number).then(res => {
       if (res.code == 200) {
-        ElMessage.success('点赞成功')
+        ElMessage.success('收藏成功')
         stars.value = !stars.value
+        ArticleInfo.value.collection++
       }
       else {
         ElMessage.error(res.message)
       }
     }).catch(() => {
-      ElMessage.error('取消点赞失败')
+      ElMessage.error('取消收藏失败')
     })
   }
   else {
     coll.voidArt(ArticleInfo.value.id as number).then(res => {
       if (res.code == 200) {
-        ElMessage.success('取消点赞成功')
+        ElMessage.success('取消收藏成功')
         stars.value = !stars.value
+        ArticleInfo.value.collection--
       }
       else {
         ElMessage.error(res.message)
       }
     }).catch(() => {
-      ElMessage.error('取消点赞失败')
+      ElMessage.error('取消收藏失败')
     })
   }
 }

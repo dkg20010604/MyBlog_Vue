@@ -57,4 +57,7 @@ export default defineConfig({
     }),
 
   ],
+  server:{
+    host:'10.40.77.188'
+  }
 })

@@ -26,33 +26,26 @@
             </el-card>
 
 
-            <el-card shadow="hover" v-show="!show">
+            <el-card style="width: 100%;" shadow="hover" v-show="!show">
                 <div style="display: inline;">
                     <h3>立即注册</h3>
                 </div>
                 <el-form :model="reginfo" ref="Regform" :rules="regrule" label-width="80px" :inline="false">
-                    <el-form-item label="账号：" prop="account" class="loginitem">
-                        <el-input v-model="reginfo.account" placeholder="请输入账号" size="default" clearable
-                            @change=""></el-input>
+                    <el-form-item label="邮箱：" prop="account" class="loginitem">
+                        <el-input v-model="reginfo.account" placeholder="请输入邮箱" size="default" @change=""></el-input>
                     </el-form-item>
                     <el-form-item label="昵称：" prop="nickName" class="loginitem">
-                        <el-input v-model="reginfo.nickName" placeholder="请输入昵称" size="default" clearable
-                            @change=""></el-input>
-                    </el-form-item>
-                    <el-form-item label="邮箱：" prop="email" class="loginitem">
-                        <el-input v-model="reginfo.email" placeholder="请输入邮箱" size="default" clearable
-                            @change=""></el-input>
+                        <el-input v-model="reginfo.nickName" placeholder="请输入昵称" size="default" @change=""></el-input>
                     </el-form-item>
                     <el-form-item label="地址：" prop="address" class="loginitem">
-                        <el-input v-model="reginfo.address" placeholder="请输入地址" size="default" clearable
-                            @change=""></el-input>
+                        <el-input v-model="reginfo.address" placeholder="请输入地址" size="default" @change=""></el-input>
                     </el-form-item>
                     <el-form-item label="密码：" prop="password" class="loginitem">
                         <el-input v-model="reginfo.password" placeholder="请输入密码" type="password" @change=""></el-input>
 
                     </el-form-item>
                     <el-form-item label="头像：" class="loginitem" prop="userImg">
-                        <el-upload class="avatar-uploader" action="http://localhost:5064/api/Picture/headfile"
+                        <el-upload class="avatar-uploader" action="http://10.40.77.188:32770/api/Picture/headfile"
                             :show-file-list="false" :on-success="imgsuccess" :before-upload="beforeup">
                             <img v-if="userimg" :src="userimg" class="avatar" />
                             <el-icon v-else class="avatar-uploader-icon">
@@ -68,26 +61,38 @@
             </el-card>
         </div>
     </div>
+    <div>
+        <el-dialog v-model="showdialog" title="输入验证码" width="30%">
+            <el-input v-model="vircode.code" placeholder="输入验证码" clearable></el-input>
+
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" @click="regstart">
+                        确定
+                    </el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
 </template>
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
-import { LoginClient, PictureClient, type RegInfo } from '@/controller'
+import { LoginClient, EmailClient, PictureClient, type RegInfo, type VerifyDTO } from '@/controller'
 import type { UploadProps, FormInstance, FormRules } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue'
 const Router = useRouter();
+const email = new EmailClient()
 const loginapi = new LoginClient();
-const picapi = new PictureClient();
 const logininfo = reactive({
     username: '',
     password: '',
     reme: false,
     auto: false
 })
+const showdialog = ref(false)
 const userimg = ref('')
 const show = ref(true)
-const imgsuccess: UploadProps['onSuccess'] = (
-    response,
-    uploadFile
-) => {
+const imgsuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
     userimg.value = URL.createObjectURL(uploadFile.raw!)
     reginfo.userImg = response.data
 
@@ -107,24 +112,24 @@ const reginfo = reactive<RegInfo>({
     account: '',
     nickName: '',
     password: '',
-    email: '',
     address: '',
     userImg: ''
 })
+const vircode = reactive<VerifyDTO>({
+    account: '',
+    code: ''
+});
 const Regform = ref<FormInstance>()
 const regrule = reactive<FormRules>({
     account: [
-        { required: true, min: 3, message: '请输入少三位账号', trigger: 'blur' }
+        { required: true, min: 3, message: '请输入邮箱', trigger: 'blur' },
+        { required: true, type: 'email', message: '邮箱格式错误', trigger: 'blur' }
     ],
     nickName: [
         { required: true, min: 3, message: '请输入至少三位昵称', trigger: 'blur' }
     ],
     password: [
         { required: true, min: 6, message: '密码不得少于6位', trigger: 'blur' }
-    ],
-    email: [
-        { required: true, message: '请输入邮箱', trigger: 'blur' },
-        { required: true, type: 'email', message: '邮箱格式错误', trigger: 'blur' }
     ],
     address: [
         { required: true, message: '请输入地址' }
@@ -137,13 +142,34 @@ const regbutton = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     await formEl.validate(async (valid) => {
         if (valid) {
-            const res = await loginapi.reg(reginfo)
-            if (res.code == 200) {
-                ElMessage.success("注册成功");
-                show.value = !(show.value)
-            }
+            // 填写完成 开始邮箱验证
+            email.sendSecure(reginfo.account).then(res => {
+                if (res.code == 200) {
+                    ElMessage.success('发送成功，请注意查收')
+                    showdialog.value = true
+                    vircode.account = reginfo.account
+                }
+            }).catch(() => {
+                ElMessage.error('发送失败')
+            })
         }
     })
+}
+const regstart = async () => {
+    const coderes = await email.verifyCode(vircode)
+    // 验证成功
+    if (coderes.code == 200) {
+        const res = await loginapi.reg(reginfo)
+        if (res.code == 200) {
+            ElMessage.success("注册成功");
+            showdialog.value = false
+            show.value = !(show.value)
+        }
+    }
+    // 失败
+    else {
+        ElMessage.error("验证码错误")
+    }
 }
 const LoginRef = ref<FormInstance>()
 const loginRule = reactive<FormRules>({
@@ -163,8 +189,14 @@ const loginButton = async (formEl: FormInstance | undefined) => {
             if (res.code == 200) {
                 ElMessage.success('登陆成功')
                 localStorage.setItem('MyBlogJwt', 'Bearer ' + res.data?.jwt as string);
+                if (logininfo.reme) {
+                    localStorage.setItem('MyBlogReme', logininfo.password)
+                    if (logininfo.auto) {
+                        localStorage.setItem('MyBlogAuto', 'true')
+                    }
+                }
                 Router.push({
-                    name: 'layout'
+                    name: 'person'
                 })
             }
             else {
@@ -186,6 +218,17 @@ watch(() => logininfo.auto,
             logininfo.reme = true
         }
     });
+onMounted(() => {
+    if (localStorage.getItem('MyBlogAuto') == 'true') {
+        loginapi.getByJwt().then(res => {
+            if (res.code == 200) {
+                Router.push({
+                    name: 'person'
+                })
+            }
+        })
+    }
+})
 </script>
 <style scoped>
 .cardform {

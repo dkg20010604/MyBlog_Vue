@@ -7,6 +7,7 @@
 /* tslint:disable */
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
+const ServiceUrl='http://10.40.77.188:32770'
 export class ArticleClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -14,7 +15,7 @@ export class ArticleClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -306,7 +307,7 @@ export class ArticleClient {
     /**
      * 复杂查询（标签）
      */
-    searchByTags(search: PageDataOfString): Promise<ArticleDTO[]> {
+    searchByTags(search: PageDataOfString): Promise<PageDataOfArticleDTO> {
         let url_ = this.baseUrl + "/api/Article/complicated";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -327,13 +328,13 @@ export class ArticleClient {
         });
     }
 
-    protected processSearchByTags(response: Response): Promise<ArticleDTO[]> {
+    protected processSearchByTags(response: Response): Promise<PageDataOfArticleDTO> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
                 let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArticleDTO[];
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as PageDataOfArticleDTO;
                 return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -341,14 +342,14 @@ export class ArticleClient {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ArticleDTO[]>(null as any);
+        return Promise.resolve<PageDataOfArticleDTO>(null as any);
     }
 
     /**
      * 业务无关接口
      * @param name (optional) 
      */
-    getfile(name: string | null | undefined): Promise<boolean> {
+    getfile(name?: string | null | undefined): Promise<boolean> {
         let url_ = this.baseUrl + "/api/Article/Service?";
         if (name !== undefined && name !== null)
             url_ += "name=" + encodeURIComponent("" + name) + "&";
@@ -392,13 +393,13 @@ export class ChatClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
      * 获得与某人的聊天记录
      */
-    getChat(userId: number, pageindex: number, pagesize: number): Promise<ResCodeOfPageDataOfChatInfo> {
+    getChat(userId: number, pageindex: number, pagesize: number): Promise<ResCodeOfPageDataOfChatDTO> {
         let url_ = this.baseUrl + "/api/Chat/{userId}/{pageindex}/{pagesize}";
         if (userId === undefined || userId === null)
             throw new Error("The parameter 'userId' must be defined.");
@@ -424,13 +425,13 @@ export class ChatClient {
         });
     }
 
-    protected processGetChat(response: Response): Promise<ResCodeOfPageDataOfChatInfo> {
+    protected processGetChat(response: Response): Promise<ResCodeOfPageDataOfChatDTO> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
                 let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfPageDataOfChatInfo;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfPageDataOfChatDTO;
                 return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -438,13 +439,13 @@ export class ChatClient {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ResCodeOfPageDataOfChatInfo>(null as any);
+        return Promise.resolve<ResCodeOfPageDataOfChatDTO>(null as any);
     }
 
     /**
      * 发送消息
      */
-    sendMessage(receiveId: number, message: string): Promise<ResCodeOfBoolean> {
+    sendMessage(receiveId: number, message: string): Promise<ResCodeOfChatDTO> {
         let url_ = this.baseUrl + "/api/Chat/{ReceiveId}";
         if (receiveId === undefined || receiveId === null)
             throw new Error("The parameter 'receiveId' must be defined.");
@@ -468,13 +469,13 @@ export class ChatClient {
         });
     }
 
-    protected processSendMessage(response: Response): Promise<ResCodeOfBoolean> {
+    protected processSendMessage(response: Response): Promise<ResCodeOfChatDTO> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
                 let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfBoolean;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfChatDTO;
                 return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -482,9 +483,12 @@ export class ChatClient {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ResCodeOfBoolean>(null as any);
+        return Promise.resolve<ResCodeOfChatDTO>(null as any);
     }
 
+    /**
+     * 将指定发送者的消息全部设为已读
+     */
     recevieMessage(send: number): Promise<void> {
         let url_ = this.baseUrl + "/api/Chat/{send}";
         if (send === undefined || send === null)
@@ -495,7 +499,6 @@ export class ChatClient {
         let options_: RequestInit = {
             method: "PATCH",
             headers: {
-                'Authorization': localStorage.getItem('MyBlogJwt') as string,
             }
         };
 
@@ -518,6 +521,83 @@ export class ChatClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    /**
+     * 获得聊天用户列表
+     */
+    getChatUserList(): Promise<UserDTO[]> {
+        let url_ = this.baseUrl + "/api/Chat";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetChatUserList(_response);
+        });
+    }
+
+    protected processGetChatUserList(response: Response): Promise<UserDTO[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UserDTO[];
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDTO[]>(null as any);
+    }
+
+    /**
+     * 获取最后一条消息
+     */
+    getNewMessage(userId: number): Promise<ResCodeOfChatDTO> {
+        let url_ = this.baseUrl + "/api/Chat/getlastchat/{userId}";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetNewMessage(_response);
+        });
+    }
+
+    protected processGetNewMessage(response: Response): Promise<ResCodeOfChatDTO> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfChatDTO;
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResCodeOfChatDTO>(null as any);
+    }
 }
 
 export class CollectionAndLikeClient {
@@ -527,7 +607,7 @@ export class CollectionAndLikeClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -778,7 +858,7 @@ export class CommentClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -1065,6 +1145,99 @@ export class CommentClient {
     }
 }
 
+export class EmailClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
+    }
+
+    /**
+     * 注册发送验证码 5分钟失效
+     * @param account 用户邮箱
+     */
+    sendSecure(account: string): Promise<ResCodeOfBoolean> {
+        let url_ = this.baseUrl + "/api/Email/getcode";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(account);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendSecure(_response);
+        });
+    }
+
+    protected processSendSecure(response: Response): Promise<ResCodeOfBoolean> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfBoolean;
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResCodeOfBoolean>(null as any);
+    }
+
+    /**
+     * 验证注册验证码
+     */
+    verifyCode(verify: VerifyDTO): Promise<ResCodeOfBoolean> {
+        let url_ = this.baseUrl + "/api/Email/verify";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(verify);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processVerifyCode(_response);
+        });
+    }
+
+    protected processVerifyCode(response: Response): Promise<ResCodeOfBoolean> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfBoolean;
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResCodeOfBoolean>(null as any);
+    }
+}
+
 export class FriendClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -1072,7 +1245,7 @@ export class FriendClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -1375,7 +1548,7 @@ export class LoginClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -1721,7 +1894,7 @@ export class PictureClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -1762,10 +1935,14 @@ export class PictureClient {
     }
 
     /**
-     * 上传相册
+     * 上传相册，并写入数据库
+     * @param id 相册Id
      */
-    collectionfile(): Promise<ResCodeOfListOfString> {
-        let url_ = this.baseUrl + "/api/Picture";
+    collectionfile(id: number): Promise<ResCodeOfBoolean> {
+        let url_ = this.baseUrl + "/api/Picture/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1781,13 +1958,13 @@ export class PictureClient {
         });
     }
 
-    protected processCollectionfile(response: Response): Promise<ResCodeOfListOfString> {
+    protected processCollectionfile(response: Response): Promise<ResCodeOfBoolean> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
                 let result200: any = null;
-                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfListOfString;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfBoolean;
                 return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -1795,7 +1972,53 @@ export class PictureClient {
                 return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ResCodeOfListOfString>(null as any);
+        return Promise.resolve<ResCodeOfBoolean>(null as any);
+    }
+
+    /**
+     * 获得图片封面（最后一张图）
+     * @param id 相册Id
+     */
+    getTheardPic(id: number): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/Picture/facepic/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTheardPic(_response);
+        });
+    }
+
+    protected processGetTheardPic(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
     }
 
     /**
@@ -2014,6 +2237,91 @@ export class PictureClient {
         }
         return Promise.resolve<FileResponse>(null as any);
     }
+
+    /**
+     * 返回相册文件对应图片ID列表
+     */
+    getPicGroup(id: number): Promise<number[]> {
+        let url_ = this.baseUrl + "/api/Picture/imgs/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPicGroup(_response);
+        });
+    }
+
+    protected processGetPicGroup(response: Response): Promise<number[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as number[];
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number[]>(null as any);
+    }
+
+    /**
+     * 根据路径获取头像
+     */
+    getHeadByPath(path: string | null): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/Picture/path/{path}";
+        if (path === undefined || path === null)
+            throw new Error("The parameter 'path' must be defined.");
+        url_ = url_.replace("{path}", encodeURIComponent("" + path));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetHeadByPath(_response);
+        });
+    }
+
+    protected processGetHeadByPath(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
 }
 
 export class RoleClient {
@@ -2023,9 +2331,12 @@ export class RoleClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
+    /**
+     * 获取全部角色
+     */
     get(): Promise<Role[]> {
         let url_ = this.baseUrl + "/api/Role";
         url_ = url_.replace(/[?&]$/, "");
@@ -2068,7 +2379,7 @@ export class TagsClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     getall(): Promise<TagInfo[]> {
@@ -2105,7 +2416,7 @@ export class TagsClient {
         return Promise.resolve<TagInfo[]>(null as any);
     }
 
-    addTag(tagname: string | null | undefined): Promise<boolean> {
+    addTag(tagname?: string | null | undefined): Promise<boolean> {
         let url_ = this.baseUrl + "/api/Tags/addtag?";
         if (tagname !== undefined && tagname !== null)
             url_ += "tagname=" + encodeURIComponent("" + tagname) + "&";
@@ -2342,7 +2653,7 @@ export class UserClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -2460,6 +2771,9 @@ export class UserClient {
         return Promise.resolve<ResCodeOfUserDTO>(null as any);
     }
 
+    /**
+     * 获取点击最高的文章和使用最多的标签
+     */
     getViewNumberArticle(): Promise<ResCodeOfListOfDictionaryOfStringAndInteger> {
         let url_ = this.baseUrl + "/api/User/order";
         url_ = url_.replace(/[?&]$/, "");
@@ -2494,6 +2808,9 @@ export class UserClient {
         return Promise.resolve<ResCodeOfListOfDictionaryOfStringAndInteger>(null as any);
     }
 
+    /**
+     * 获取文章数与评论数
+     */
     getArsComms(): Promise<ResCodeOfListOfInteger> {
         let url_ = this.baseUrl + "/api/User/numbers";
         url_ = url_.replace(/[?&]$/, "");
@@ -2527,6 +2844,94 @@ export class UserClient {
         }
         return Promise.resolve<ResCodeOfListOfInteger>(null as any);
     }
+
+    /**
+     * 更改密码
+     */
+    changePassword(passwordgroup: ValueTupleOfStringAndString): Promise<ResCodeOfBoolean> {
+        let url_ = this.baseUrl + "/api/User/changepass";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(passwordgroup);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PATCH",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processChangePassword(_response);
+        });
+    }
+
+    protected processChangePassword(response: Response): Promise<ResCodeOfBoolean> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfBoolean;
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResCodeOfBoolean>(null as any);
+    }
+
+    /**
+     * 搜索用户
+     * @param account 账号前缀或用户名
+     */
+    searchUsers(pageindex: number, pagesize: number, account: string | null): Promise<ResCodeOfPageDataOfUserDTO> {
+        let url_ = this.baseUrl + "/api/User/search/{pageindex}/{pagesize}/{account}";
+        if (pageindex === undefined || pageindex === null)
+            throw new Error("The parameter 'pageindex' must be defined.");
+        url_ = url_.replace("{pageindex}", encodeURIComponent("" + pageindex));
+        if (pagesize === undefined || pagesize === null)
+            throw new Error("The parameter 'pagesize' must be defined.");
+        url_ = url_.replace("{pagesize}", encodeURIComponent("" + pagesize));
+        if (account === undefined || account === null)
+            throw new Error("The parameter 'account' must be defined.");
+        url_ = url_.replace("{account}", encodeURIComponent("" + account));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                'Authorization': localStorage.getItem('MyBlogJwt') as string,
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSearchUsers(_response);
+        });
+    }
+
+    protected processSearchUsers(response: Response): Promise<ResCodeOfPageDataOfUserDTO> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+                let result200: any = null;
+                result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResCodeOfPageDataOfUserDTO;
+                return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+                return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResCodeOfPageDataOfUserDTO>(null as any);
+    }
 }
 
 export class UserGroupClient {
@@ -2536,7 +2941,7 @@ export class UserGroupClient {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "http://localhost:5064";
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : ServiceUrl;
     }
 
     /**
@@ -2742,14 +3147,14 @@ export class UserGroupClient {
 export interface ResCodeOfPageDataOfArticleDTO {
     code?: number;
     message?: string | undefined;
-    data?: PageDataOfArticleDTO | undefined;
+    data: PageDataOfArticleDTO;
 }
 
 export interface PageDataOfArticleDTO {
     pageindex?: number;
     pageSize?: number;
     total?: number;
-    data?: ArticleDTO[] | undefined;
+    data: ArticleDTO[];
 }
 
 export interface ArticleDTO {
@@ -2760,8 +3165,8 @@ export interface ArticleDTO {
     creatTime?: Date;
     changeTime?: Date | undefined;
     count?: number;
-    collection?: number;
-    likeNumber?: number;
+    collection: number;
+    likeNumber: number;
     status?: number;
     typeNumber?: number;
     isTop?: boolean;
@@ -2795,31 +3200,115 @@ export interface PageDataOfString {
     pageindex?: number;
     pageSize?: number;
     total?: number;
-    data?: string[] | undefined;
+    data: string[];
 }
 
-export interface ResCodeOfPageDataOfChatInfo {
+export interface ResCodeOfPageDataOfChatDTO {
     code?: number;
     message?: string | undefined;
-    data?: PageDataOfChatInfo | undefined;
+    data: PageDataOfChatDTO;
 }
 
-export interface PageDataOfChatInfo {
+export interface PageDataOfChatDTO {
     pageindex?: number;
     pageSize?: number;
     total?: number;
-    data?: ChatInfo[] | undefined;
+    data: ChatDTO[];
 }
 
-export interface ChatInfo {
+export interface ChatDTO {
     id?: number;
     sendId?: number;
     receiveId?: number;
     message?: string;
     receiveStatus?: boolean;
-    sendTime?: Date;
-    receive?: DetilUser;
-    send?: DetilUser;
+    sendTime: Date;
+}
+
+export interface ResCodeOfChatDTO {
+    code?: number;
+    message?: string | undefined;
+    data: ChatDTO;
+}
+
+export interface UserDTO {
+    id?: number;
+    account?: string;
+    nickName: string;
+    inyro?: string | undefined;
+    fans?: number;
+    userImg?: string;
+    address?: string;
+    jwt?: string | undefined;
+}
+
+export interface CommentDTO {
+    isLike?: boolean;
+    commend?: number;
+    articleId?: number;
+    userId?: number;
+    commentText?: string;
+    isResponse?: boolean;
+    responseId?: number | undefined;
+    likeCount?: number | undefined;
+    status?: number;
+    releaseTime?: Date;
+    parent?: CommentDTO | undefined;
+    children?: CommentDTO[] | undefined;
+}
+
+export interface ResCodeOfListOfCommentDTO {
+    code?: number;
+    message?: string | undefined;
+    data?: (CommentDTO)[];
+}
+
+export interface VerifyDTO {
+    account: string;
+    code: string;
+}
+
+export interface ResCodeOfFansDTO {
+    code?: number;
+    message?: string | undefined;
+    data?: FansDTO | undefined;
+}
+
+export interface FansDTO {
+    users?: UserDTO[];
+    count?: number;
+}
+
+export interface ResCodeOfDictionaryOfStringAndInteger {
+    code?: number;
+    message?: string | undefined;
+    data?: { [key: string]: number; } | undefined;
+}
+
+export interface ResCodeOfUserDTO {
+    code?: number;
+    message?: string | undefined;
+    data: UserDTO;
+}
+
+export interface LoginInfo {
+    account?: string;
+    password?: string;
+}
+
+export interface RegInfo {
+    account: string;
+    nickName?: string;
+    password?: string;
+    email?: string;
+    address?: string;
+    userImg?: string;
+}
+
+export interface ResCodeOfListOfDetilUser {
+    code?: number;
+    message?: string | undefined;
+    data?: (DetilUser | undefined)[] | undefined;
 }
 
 export interface DetilUser {
@@ -2842,7 +3331,18 @@ export interface DetilUser {
     commentInfoResponses?: CommentInfo[];
     commentInfoUsers?: CommentInfo[];
     role?: Role;
-    userPictures?: UserPicture[];
+    userPictures?: PictureGroupInfo[];
+}
+
+export interface ChatInfo {
+    id?: number;
+    sendId?: number;
+    receiveId?: number;
+    message?: string;
+    receiveStatus?: boolean;
+    sendTime: Date;
+    receive?: DetilUser;
+    send?: DetilUser;
 }
 
 export interface ArticleInfo {
@@ -2893,7 +3393,7 @@ export interface Role {
     detilUsers?: DetilUser[];
 }
 
-export interface UserPicture {
+export interface PictureGroupInfo {
     groupId?: number;
     userId?: number;
     groupName?: string;
@@ -2902,98 +3402,16 @@ export interface UserPicture {
 }
 
 export interface GroupPicture {
-    id?: number;
+    id?: number | undefined;
     groupId?: number;
     pictureId?: number;
-    group?: UserPicture;
+    group?: PictureGroupInfo;
     picture?: Picture;
 }
 
 export interface Picture {
     id?: number;
     path?: string | undefined;
-}
-
-export interface CommentDTO {
-    isLike?: boolean;
-    commend?: number;
-    articleId?: number;
-    userId?: number;
-    commentText?: string;
-    isResponse?: boolean;
-    responseId?: number | undefined;
-    likeCount?: number | undefined;
-    status?: number;
-    releaseTime?: Date;
-    parent?: CommentDTO | undefined;
-    children?: CommentDTO[] | undefined;
-}
-
-export interface ResCodeOfListOfCommentDTO {
-    code?: number;
-    message?: string | undefined;
-    data: CommentDTO[];
-}
-
-export interface ResCodeOfFansDTO {
-    code?: number;
-    message?: string | undefined;
-    data?: FansDTO | undefined;
-}
-
-export interface FansDTO {
-    users?: UserDTO[];
-    count?: number;
-}
-
-export interface UserDTO {
-    id?: number;
-    account?: string;
-    nickName?: string;
-    inyro?: string | undefined;
-    fans?: number;
-    userImg?: string;
-    address?: string;
-    email?: string;
-    jwt?: string | undefined;
-}
-
-export interface ResCodeOfDictionaryOfStringAndInteger {
-    code?: number;
-    message?: string | undefined;
-    data?: { [key: string]: number; } | undefined;
-}
-
-export interface ResCodeOfUserDTO {
-    code?: number;
-    message?: string | undefined;
-    data: UserDTO;
-}
-
-export interface LoginInfo {
-    account?: string;
-    password?: string;
-}
-
-export interface RegInfo {
-    account?: string;
-    nickName?: string;
-    password?: string;
-    email?: string;
-    address?: string;
-    userImg?: string;
-}
-
-export interface ResCodeOfListOfDetilUser {
-    code?: number;
-    message?: string | undefined;
-    data?: (DetilUser | undefined)[] | undefined;
-}
-
-export interface ResCodeOfListOfString {
-    code?: number;
-    message?: string | undefined;
-    data?: (string | undefined)[] | undefined;
 }
 
 export interface ResCodeOfListOfTagDTO {
@@ -3013,7 +3431,6 @@ export interface ChangeUserInfoAble {
     inyro?: string | undefined;
     userImg?: string;
     address?: string;
-    email?: string;
 }
 
 export interface ResCodeOfListOfDictionaryOfStringAndInteger {
@@ -3025,17 +3442,35 @@ export interface ResCodeOfListOfDictionaryOfStringAndInteger {
 export interface ResCodeOfListOfInteger {
     code?: number;
     message?: string | undefined;
-    data: number[];
+    data?: number[] | undefined;
+}
+
+export interface ValueTupleOfStringAndString {
+    oldPass: string;
+    newPass: string;
+}
+
+export interface ResCodeOfPageDataOfUserDTO {
+    code?: number;
+    message?: string | undefined;
+    data?: PageDataOfUserDTO | undefined;
+}
+
+export interface PageDataOfUserDTO {
+    pageindex?: number;
+    pageSize?: number;
+    total?: number;
+    data?: UserDTO[] | undefined;
 }
 
 export interface ResCodeOfListOfUserGroupDTO {
     code?: number;
     message?: string | undefined;
-    data?: (UserGroupDTO | undefined)[] | undefined;
+    data: (UserGroupDTO)[];
 }
 
 export interface UserGroupDTO {
-    groupId?: number;
+    groupId: number;
     groupName?: string;
 }
 
@@ -3069,11 +3504,10 @@ export class ApiException extends Error {
         return obj.isApiException === true;
     }
 }
-function throwException(message: string, status: number, response: string, headers: { [key: string]: any; }, result?: any): any {
 
-    if (result !== null && result !== undefined) {
+function throwException(message: string, status: number, response: string, headers: { [key: string]: any; }, result?: any): any {
+    if (result !== null && result !== undefined)
         throw result;
-    }
     else
-        throw new ApiException(message, status, response, headers, null);
+        throw new ApiException(message, status, response, headers, result);
 }
