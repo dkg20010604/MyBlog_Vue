@@ -1,6 +1,6 @@
 <template>
     <div class="main">
-        <div style="width: 30%;background-color: aqua;padding:5px 0px">
+        <div style="width: 30%;background-color:beige;padding:5px 0px">
             <el-card @click="StartChat(index)" style="margin-top: 2px;" v-for="(item, index ) in Firends" shadow="hover"
                 :body-style="{ padding: '5px' }" :class="{ 'whthchatclass': item.withchat }">
                 <div style="display: flex;align-items: center">
@@ -10,10 +10,10 @@
                 </div>
             </el-card>
         </div>
-        <div style="width: 70%; background-color: blue;padding:5px 0px;">
+        <div style="width: 70%; background-color:darkgrey;padding:5px 0px;">
             <el-card style="width: 100%;height: 99%;" shadow="always" :body-style="{
-                padding: '10px', height: '80%', flexDirection: 'row', alignContent: 'flex-end'
-            }">
+                    padding: '10px', height: '80%', flexDirection: 'row', alignContent: 'flex-end'
+                }">
                 <template #header>
                     <span>{{ withchat?.nickName }}</span>
                 </template>
@@ -23,12 +23,12 @@
                             <p style="margin: 0;align-items: center;justify-items: center;font-size: 15px;">
                                 {{ item.sendTime.toString().replace('T', " ") }}
                             </p>
-                            <div :class="{ issend: item.sendId == store.userinfo.id }" class="chatview">
+                            <div :class="{ issend: item.sendId == store.userinfo?.id }" class="chatview">
                                 <el-avatar
-                                    :src="item.sendId == store.userinfo.id ? store.userinfo.userImg : Firends[chatting].headimg"
+                                    :src="item.sendId == store.userinfo?.id ? store.userinfo.userImg : Firends[chatting].headimg"
                                     icon="el-icon-user-solid" size="default" shape="circle" fit="fill"></el-avatar>
                                 <div style="margin-left: 8px;">
-                                    <p class="nicknane">{{ item.sendId == store.userinfo.id ? store.userinfo.nickName :
+                                    <p class="nicknane">{{ item.sendId == store.userinfo?.id ? store.userinfo?.nickName :
                                         Firends[chatting].nickName }}</p>
                                     <div>
                                         <p>{{ item.message }}</p>
@@ -89,7 +89,7 @@ onMounted(() => {
             chatlist.value?.push(data)
         }
         else {
-            
+
         }
     })
 })

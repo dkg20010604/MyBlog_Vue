@@ -39,6 +39,9 @@
                         <v-md-preview class="textdiv" :text="a.detail" height="80%"></v-md-preview>
                     </div>
                 </el-card>
+                <el-pagination layout="prev, pager, next" :total="page.total" :page-size="page.pageSize"
+                    :hide-on-single-page="false" />
+
             </div>
         </el-drawer>
     </div>
@@ -65,10 +68,14 @@
 </template>
     
 <script lang='ts' setup>
-import { onMounted, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
 import { PictureClient, ArticleClient, TagsClient, type ArticleDTO, type PageDataOfArticleDTO, type TagInfo, type TagDTO } from '@/controller'
 import { ElMessage, ElMessageBox, type Action } from 'element-plus';
+import { useRoute, useRouter } from 'vue-router';
 let timeout: any;
+const route = useRoute()
+const router = useRouter()
+const TotlePage = ref(0)
 const SearchTag = (queryString: string, cb: (arg: any) => void) => {
     clearTimeout(timeout)
     timeout = setTimeout(async () => {
@@ -122,7 +129,7 @@ const UploadImage = async (event: any, insertImage: any, files: (string | Blob)[
     const res = await pic.upLoadArticleImg(formData);
     console.log(res);
     insertImage({
-        url: 'http://localhost:5064/api/Picture/GetByPicName/' + res.data,
+        url: 'http://10.40.77.188:32770/api/Picture/GetByPicName/' + res.data,
         width: 'auto',
         height: 'auto',
     })
@@ -133,11 +140,23 @@ const articleInfo = reactive<ArticleDTO>({
     title: '',
     detail: '',
     collection: 0,
-    likeNumber: 0
+    likeNumber: 0,
+    userId: 0,
+    changeTime: undefined,
+    count: 0,
+    status: 0,
+    typeNumber: 0,
+    isTop: false,
+    tags: undefined,
+    creatTime: new Date()
 })
 const tagtext = ref('')
 const tags = ref<TagDTO[]>([])
 const releaseArticle = async (status: number) => {
+    if (!articleInfo.title) {
+        ElMessage.warning('请填写标题');
+        return;
+    }
     articleInfo.status = status;
     articleInfo.tags = tags.value
     if (articleInfo.id == undefined) {
@@ -158,21 +177,28 @@ const releaseArticle = async (status: number) => {
         }
     }
 }
-
 const page = reactive<PageDataOfArticleDTO>({
     pageindex: 1,
     pageSize: 20,
-    data: []
+    data: [],
+    total: 0
 })
 const GetArticle = async () => {
-    const res = await art.getArticle(page)
+    const res = await art.getPersonalArticle(page.pageindex as number)
     page.data = res.data.data
+    TotlePage.value = (page.total as number) / (page.pageSize as number)
     console.log(articleInfo.id);
     showDrawer.value = true;
 
 }
 
 const select = (a: ArticleDTO) => {
+    router.push({
+        name: 'release',
+        params: {
+            id: a.id
+        }
+    })
     articleInfo.id = a.id;
     articleInfo.title = a.title;
     articleInfo.detail = a.detail;
@@ -182,6 +208,26 @@ const select = (a: ArticleDTO) => {
     tags.value = JSON.parse(JSON.stringify(articleInfo.tags)) as TagInfo[];
     console.log(articleInfo.id);
 }
+onBeforeMount(async () => {
+    if ((route.params.id as unknown as number) == 0)
+        return;
+    else {
+        await art.getPersonalArticleById(route.params.id as unknown as number).then(res => {
+            if (res.code == 200) {
+                articleInfo.id = res.data.id;
+                articleInfo.title = res.data.title;
+                articleInfo.detail = res.data.detail;
+                articleInfo.userId = res.data.userId;
+                showDrawer.value = false;
+                articleInfo.tags = res.data.tags
+                tags.value = JSON.parse(JSON.stringify(articleInfo.tags)) as TagInfo[];
+            }
+            else {
+                ElMessage.error(res.message)
+            }
+        })
+    }
+})
 const clear = () => {
     ElMessageBox.alert('你确定要清空吗？（清空并不会删除文章）', '警告', {
         // if you want to disable its autofocus

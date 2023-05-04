@@ -26,7 +26,6 @@
           <v-md-preview :text="ArticleInfo?.detail" ref="preview"></v-md-preview>
           <el-tag style="margin-left: 50px;" v-for="tag in ArticleInfo?.tags" type="success" size="large" effect="dark"
             @close="">{{ tag.tagName }}</el-tag>
-
         </el-col>
       </el-row>
     </div>

@@ -12,7 +12,8 @@
                     <el-form-item label="输入密码：" prop="password" class="loginitem">
                         <el-input v-model="logininfo.password" type="password"></el-input>
                     </el-form-item>
-                    <el-button link type="primary" size="small" @click="" style="margin-top: -20px;">忘记密码？</el-button>
+                    <el-button link type="primary" size="small" @click="Router.push('/Recover')"
+                        style="margin-top: -20px;">忘记密码？</el-button>
                     <el-form-item class="Loginstatus">
                         <el-checkbox v-model="logininfo.reme" label="记住密码" size="large"></el-checkbox>
                         <el-checkbox v-model="logininfo.auto" label="下次自动登录" size="large"></el-checkbox>
@@ -189,6 +190,7 @@ const loginButton = async (formEl: FormInstance | undefined) => {
             if (res.code == 200) {
                 ElMessage.success('登陆成功')
                 localStorage.setItem('MyBlogJwt', 'Bearer ' + res.data?.jwt as string);
+                localStorage.setItem('MyBlogUserId', res.data?.id as unknown as string);
                 if (logininfo.reme) {
                     localStorage.setItem('MyBlogReme', logininfo.password)
                     if (logininfo.auto) {
@@ -240,8 +242,6 @@ onMounted(() => {
     align-items: center;
 
 }
-
-
 .loginitem {
     margin: 20px;
 }

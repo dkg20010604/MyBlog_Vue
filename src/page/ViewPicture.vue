@@ -1,6 +1,6 @@
 <template>
     <div class="images">
-        <el-image :preview-src-list="files" hide-on-click-modal v-if="showimg" style="max-width: 48%; margin: auto;"
+        <el-image :preview-src-list="files" hide-on-click-modal v-if="showimg" style="max-width: 48%;margin: auto; margin-top: 8px;"
             sizes="200" v-for="(file, index) of files" :src="file" alt=""></el-image>
     </div>
     <div class="uparea">

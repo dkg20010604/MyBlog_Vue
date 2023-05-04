@@ -9,6 +9,16 @@ const router = createRouter({
       name: 'login'
     },
     {
+      path: '/Recover',
+      component: () => import('@/views/RecoverPassWord.vue'),
+      name: 'Recover',
+    },
+    {
+      path: '/Recover/:token',
+      component: () => import('@/views/RecoverPassWord.vue'),
+      name: 'RecoverPass',
+    },
+    {
       path: '/Layout',
       component: () => import('@/views/LayoutView.vue'),
       name: 'layout',
@@ -20,7 +30,7 @@ const router = createRouter({
           name: 'person'
         },
         {
-          path: '/release',
+          path: '/release/:id',
           component: () => import('@/page/Release.vue'),
           name: 'release',
         },
@@ -31,7 +41,7 @@ const router = createRouter({
 
         },
         {
-          path: '/search',
+          path: '/search/:type/:pageIndex/:query',
           component: () => import('@/page/SearchRes.vue'),
           name: 'searchartticle'
         },
@@ -50,15 +60,51 @@ const router = createRouter({
           component: () => import('@/page/ViewPicture.vue'),
           name: 'viewpicture'
         },
+
         {
           path: '/chat',
           component: () => import('@/page/Chat.vue'),
           name: 'chat'
         },
         {
-          path: '/searchuser',
+          path: '/searchuser/:type/:pageIndex/:query',
           component: () => import('@/page/SearchUser.vue'),
           name: 'searchuser'
+        },
+        {
+          path: '/articleview/:pageIndex/:userid',
+          component: () => import('@/page/ArticleListPage.vue'),
+          name: 'articleview'
+        },
+        {
+          path: '/commentview/:type/:pageIndex',
+          component: () => import('@/page/CommentListPage.vue'),
+          name: 'commentview'
+        },
+        {
+          path: '/hangfire',
+          component: () => import('@/page/HangFirePage.vue'),
+          name: 'hangfire'
+        },
+        {
+          path: '/articlecollection/:pageIndex',
+          component: () => import('@/page/ArticleCollection.vue'),
+          name: 'articlecollection'
+        },
+        {
+          path: '/adminuser/:pageIndex/:userType/:userStatus',
+          component: () => import('@/AdminPage/AdminUser.vue'),
+          name: 'adminuser'
+        },
+        {
+          path: '/adminarticle/:pageIndex/:articleStatus',
+          component: () => import('@/AdminPage/AdminArticle.vue'),
+          name: 'adminarticle'
+        },
+        {
+          path: '/admincomment/:pageIndex/:status',
+          component: () => import('@/AdminPage/AdminComment.vue'),
+          name: 'admincomment'
         }
       ]
     },

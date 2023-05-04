@@ -1,6 +1,6 @@
 <template>
   <el-menu active-text-color="#ffd04b" background-color="#545c64" class="el-menu" default-active="person"
-    text-color="#fff" @open="handleOpen" @close="handleClose" @select="menuSelect">
+    text-color="#fff" @select="menuSelect">
     <el-menu-item index="person">
       <home theme="outline" size="24" fill="#ffffff" :strokeWidth="3" strokeLinejoin="bevel" />
       <span style="width: 100%;align-items: center;display: flex;">首页</span>
@@ -13,6 +13,10 @@
       <el-menu-item index="release">
         <TopicDiscussion theme="outline" size="24" fill="#ffffff" :strokeWidth="3" strokeLinejoin="bevel" />
         <span>发布文章</span>
+      </el-menu-item>
+      <el-menu-item index="articlecollection">
+        <TopicDiscussion theme="outline" size="24" fill="#ffffff" :strokeWidth="3" strokeLinejoin="bevel" />
+        <span>我的收藏</span>
       </el-menu-item>
     </el-sub-menu>
     <el-menu-item index="searchartticle" key="">
@@ -35,6 +39,29 @@
       <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
       <span>个人设置</span>
     </el-menu-item>
+    <el-sub-menu index="AdminGroup" v-if="showHangFire">
+      <template #title>
+        <Notes theme="outline" size="24" fill="#ffffff" :strokeWidth="3" strokeLinejoin="bevel" />
+        <span>管理功能</span>
+      </template>
+      <el-menu-item v-if="showHangFire" index="adminuser" key="">
+        <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+        <span>用户管理</span>
+      </el-menu-item>
+      <el-menu-item v-if="showHangFire" index="adminarticle" key="">
+        <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+        <span>文章管理</span>
+      </el-menu-item>
+      <el-menu-item v-if="showHangFire" index="admincomment" key="">
+        <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+        <span>评论管理</span>
+      </el-menu-item>
+      <el-menu-item v-if="showHangFire" index="hangfire" key="">
+        <config theme="outline" size="24" fill="#ffffff" :strokeWidth="3" />
+        <span>后台任务</span>
+      </el-menu-item>
+    </el-sub-menu>
+
 
   </el-menu>
 </template>
@@ -42,34 +69,18 @@
 import { DocSearchTwo, TopicDiscussion, Home, Notes, Search, Config, PictureAlbum, MessageOne } from '@icon-park/vue-next';
 import { onBeforeMount } from 'vue';
 import { MenuIndex } from '@/stores/MenuStore'
-const handleOpen = (key: string, keyPath: string[]) => {
-  // console.log(key, keyPath)
-}
-const handleClose = (key: string, keyPath: string[]) => {
-}
-
+import { LoginClient } from '@/controller'
+const showHangFire = ref(false)
+const login = new LoginClient()
 const menuSelect = (index: string) => {
   MenuIndex().SetMenu(index)
 }
 
-type menuitem = {
-  index: String,
-  key: string,
-  title: string
-}[]
 
-
-const menulist = [{
-  index: 'article',
-  title: '文章管理',
-  list: [{
-    index: 'addarticle',
-    key: 'article-add',
-    title: '发布文章'
-  }] as menuitem
-}]
-onBeforeMount(() => {
-
+onBeforeMount(async () => {
+  await login.admin().then(res => [
+    showHangFire.value = res
+  ])
 })
 </script>
 

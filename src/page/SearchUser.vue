@@ -1,75 +1,133 @@
 <template>
     <div class="searchinput">
-        <el-input v-model="searchpage.data[0]" placeholder="输入用户名或账号" size="large">
+        <el-input v-model="query" placeholder="输入用户名或邮箱" size="large">
             <template #append style="width: 20%;">
                 <div>
                     <el-button-group style="display: flex;">
-                        <el-button type="primary" round size="default" @click="searchTitle">搜索</el-button>
+                        <el-button type="primary" round size="default" @click="searchByaccount">搜索邮箱</el-button>
+                        <el-button type="primary" round size="default" @click="searchByNickname">搜索昵称</el-button>
                     </el-button-group>
                 </div>
             </template>
         </el-input>
     </div>
-    <div class="reslist">
-        <el-card @click="clickcard(res.id as number)" v-for="res in articles.data" shadow="hover"
-            :body-style="{ padding: 10 }" class="cardlist">
-            <div class="cardinfo">
-                <div class="cardheader">
-                    <p style="word-break: keep-all;overflow: hidden; text-overflow: ellipsis;">{{ res.title }}</p>
-                    <div class="restags">
-                        <p class="restag" v-for="tag in res.tags">{{ tag.tagName }}</p>
+    <div class="reslist" v-if="showres" style="padding: 10px;">
+        <el-scrollbar v-infinite-scroll="LoadMore" infinite-scroll-immediate="false" style="width: 90%;">
+            <div style="display: flex; flex-wrap: wrap;">
+                <el-card v-for="user in userres" style="width:45%;margin: 20px;cursor: pointer" shadow="hover"
+                    :body-style="{ padding: '20px' }">
+                    <div style="display: flex;flex-direction: row">
+                        <el-avatar icon="el-icon-user-solid" :size="60" shape="circle" :src="user.userImg"
+                            fit="fill"></el-avatar>
+                        <div style="display: flex;margin-left: 16px; flex-direction: column">
+                            <div style="font-size: 20px;"><b>{{ user.nickName }}</b></div>
+                            <div style="display: flex;">
+                                <p>{{ user.fans?.toString() }}粉丝</p>
+                                <p style="margin-left: 10px;">{{ user.inyro }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <v-md-preview :text="res.detail" style="word-break: keep-all; text-overflow: ellipsis;"></v-md-preview>
+                </el-card>
             </div>
-        </el-card>
+        </el-scrollbar>
     </div>
-    <div class="page">
-        <el-pagination background layout="prev, pager, next" :page-size="articles.pageSize" :total="articles.total" />
+    <div v-else>
+        <p>暂无数据</p>
     </div>
 </template>
     
 <script lang='ts' setup>
-import type { PageDataOfArticleDTO, PageDataOfString } from '@/controller'
-import { ArticleClient } from '@/controller'
 import { useRouter, useRoute } from 'vue-router'
-const router = useRouter();
-const route = useRoute();
-const searchclient = new ArticleClient()
-const articles = reactive<PageDataOfArticleDTO>({
-    pageindex: 1,
-    pageSize: 20,
-    total: 0,
-    data: []
-})
-const searchpage = reactive<PageDataOfString>({
-    pageindex: 1,
-    pageSize: 20,
-    data: ['']
-})
-const searchTitle = () => {
-    articles.data.length = 0;
-    searchclient.searchArticle(searchpage).then(res => {
-        res.data?.data?.forEach(a => {
-            articles.data.push(a);
-        })
-    })
-}
-const searchTag = () => {
-    articles.data.length = 0;
-    searchclient.searchByTags(searchpage).then(res => {
-        res.data?.forEach(r => {
-            articles.data.push(r)
-        })
-    })
-}
-const clickcard = (id: number) => {
+import { UserClient, PictureClient, type UserDTO } from '@/controller'
+const router = useRouter()
+const route = useRoute()
+const userclient = new UserClient()
+const headeclient = new PictureClient()
+const userres = ref<UserDTO[]>()
+const query = ref('')
+const type = ref(route.params.type as unknown as number)
+const pageindex = ref(route.params.pageIndex as unknown as number)
+const showres = ref(false)
+const searchByaccount = async () => {
     router.push({
-        name: 'viewpage',
+        name: 'searchuser',
         params: {
-            id: id
+            type: 0,
+            pageIndex: 1,
+            query: query.value.replace('.', '。')
         }
     })
+    userres.value = []
+    const res = await userclient.searchUser(query.value)
+    if (res.code == 200) {
+        userres.value?.push(res.data)
+    }
+}
+const searchByNickname = async () => {
+    router.push({
+        name: 'searchuser',
+        params: {
+            type: 1,
+            pageIndex: 1,
+            query: query.value.replace('.', '。')
+        }
+    })
+    userres.value = undefined
+    const res = await userclient.searchUsersByNickname(1, 20, query.value)
+    if (res.code == 200) {
+        userres.value = res.data
+    }
+    else {
+        ElMessage.warning(res.message)
+    }
+}
+const LoadMore = () => {
+    pageindex.value++;
+    userclient.searchUsersByNickname(pageindex.value, 20, query.value).then(res => {
+        res.data.forEach(item => {
+            userres.value?.push(item)
+        })
+    })
+}
+watch(
+    () => route.params,
+    (val, old) => {
+        if (!route.name?.toString().endsWith('searchuser')) {
+            return;
+        }
+        else {
+
+            if (type.value == 0) {
+                userclient.searchUser(query.value)
+                    .then(res => {
+                        if (res.code == 200) {
+                            userres.value?.push(res.data)
+                            showres.value = true
+                        }
+                    })
+            }
+            else {
+                userclient.searchUsersByNickname(val.pageIndex as unknown as number, 20, query.value)
+                    .then(res => {
+                        if (res.code == 200) {
+                            userres.value = res.data
+                            showres.value = true
+                        }
+                        else {
+                            ElMessage.warning(res.message)
+                        }
+                    })
+            }
+        }
+    }
+)
+const getheader = (path: string): string => {
+    let bloburl = '';
+    new PictureClient().getHeadByPath(path).then(res => {
+        const url = URL.createObjectURL(res.data);
+        bloburl = url;
+    })
+    return bloburl as string;
 }
 </script>
     
@@ -86,6 +144,7 @@ const clickcard = (id: number) => {
     flex-wrap: wrap;
     margin: auto;
     margin-top: 20PX;
+    width: 1100px;
 }
 
 .cardlist {
@@ -111,7 +170,6 @@ const clickcard = (id: number) => {
     justify-content: center;
 }
 
-.cardheader {}
 
 .restags {
     display: flex;

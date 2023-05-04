@@ -17,7 +17,7 @@
     "@kangc/v-md-editor": "^2.3.15",
     "@microsoft/signalr": "^7.0.2",
     "echarts": "^5.4.1",
-    "element-plus": "^2.2.30",
+    "element-plus": "^2.3.3",
     "mavon-editor": "^3.0.0",
     "pinia": "^2.0.28",
     "v3-img-preview": "^1.1.16",

@@ -6,7 +6,7 @@
             </el-aside>
             <el-container>
                 <el-header style="height: auto;z-index: 210;background-color: white;padding: 0;">
-                    <HeaderIndex :User="info">
+                    <HeaderIndex :User="MenuIndex().userinfo">
                     </HeaderIndex>
                 </el-header>
                 <hr color="red" size="1" style="width: 99%;">
@@ -21,20 +21,80 @@
 <script lang="ts" setup>
 import { MenuIndex } from "@/stores/MenuStore";
 import Menu from '@/components/MenuIndex.vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { onBeforeMount, onMounted, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { SignalR, type methodGroup } from '@/stores/SignalR'
 import HeaderIndex from '@/components/HeaderIndex.vue'
-import type { UserDTO, ChatDTO } from "@/controller";
-import { UserClient, LoginClient } from '@/controller'
+import { UserClient, LoginClient, PictureClient } from '@/controller'
 const router = useRouter()
 const lo = new LoginClient()
+const pic = new PictureClient()
 watch(() => MenuIndex().index,
-    () => {
-        router.push({
-            name: MenuIndex().index
-        })
+    (val, old) => {
+        if (val == 'adminuser')
+            router.push({
+                name: val,
+                params: {
+                    pageIndex: 1,
+                    userType: 0,
+                    userStatus: 3
+                }
+            })
+        else if (val == 'admincomment') {
+            router.push({
+                name: val,
+                params: {
+                    pageIndex: 1,
+                    status: 4
+                }
+            })
+        }
+        else if (val == 'adminarticle')
+            router.push({
+                name: val,
+                params: {
+                    pageIndex: 1,
+                    articleStatus: 3
+                }
+            })
+        else if (val == 'articlecollection')
+            router.push({
+                name: val,
+                params: {
+                    pageIndex: 1,
+                }
+            })
+        else if (val == 'searchuser')
+            router.push({
+                name: val,
+                params: {
+                    type: 0,
+                    pageIndex: 1,
+                    query: ' '
+                }
+            })
+        else if (val == 'searchartticle')
+            router.push({
+                name: val,
+                params: {
+                    type: 0,
+                    pageIndex: 1,
+                    query: ' '
+                }
+            })
+        else if (val == 'release')
+            router.push({
+                name: val,
+                params: {
+                    id: 0
+                }
+            })
+        else {
+            router.push({
+                name: val
+            })
+        }
     });
 onMounted(async () => {
     const meth: methodGroup[] = [
@@ -72,11 +132,13 @@ onMounted(async () => {
         await SignalR().conn.start()
     })
 })
-const info = ref<UserDTO>({ nickName: '' })
 onBeforeMount(async () => {
-    info.value = (await new UserClient().getUserByJwt()).data
-    MenuIndex().userinfo = info.value;
-
+    await new UserClient().getUserByJwt().then(res => {
+        MenuIndex().userinfo = res.data
+        pic.getHeader().then(res => {
+            MenuIndex().setUserHeaderImg(URL.createObjectURL(res.data))
+        })
+    })
 })
 </script>
 

@@ -21,6 +21,12 @@
                         <div style="margin-top: -5px;">
                             <p style="font-size:medium;">{{ item.commentText }}</p>
                         </div>
+                        <div style="float: right;">
+                            <like @click="likeComment(item.commend as number)" theme="two-tone" size="30"
+                                :fill="['#000', '#fff']" :strokeWidth="3" />
+                            {{ item.likeCount }}
+                        </div>
+
                         <div style="display:flex;flex: auto; align-items: right;width: 100%;">
                             <div>
                                 <div class="response">
@@ -55,6 +61,7 @@
 import { CommentClient, PictureClient, UserClient, type CommentDTO, type UserDTO } from '@/controller';
 import { onMounted, reactive, ref } from 'vue'
 import CommentIndex from '@/components/CommentIndex.vue'
+import { Like, Equalizer } from '@icon-park/vue-next'
 const client = new CommentClient()
 const OrIndex = defineProps<{
     comments: CommentDTO[] | undefined
@@ -124,8 +131,18 @@ const sendmessage = async (item: detie) => {
 const getresponst = async (item: detie) => {
     item.children = (await client.getResponse(item.commend as number)).data
     console.log(item.children);
+}
+const likeComment = async (id: number) => {
+    await client.upLike(id).then(res => {
+        if (res.code == 200)
+            ElMessage.success(res.message)
+        else
+            ElMessage.error(res.message)
 
-
+    }).catch(() => {
+        ElMessage.error("网络错误")
+    }
+    )
 }
 </script>
     

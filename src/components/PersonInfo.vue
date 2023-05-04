@@ -1,11 +1,11 @@
 <template>
     <div class="TopClass">
         <div style="width: 15%;">
-            <el-upload ref="headerupload" action="http://10.40.77.188:32770/api/Picture/headfile" :show-file-list="false"
+            <el-upload ref="headerupload" action="http://127.0.0.1:32770/api/Picture/headfile" :show-file-list="false"
                 :auto-upload="false" :on-success="successchangeheader" :limit="1" :on-exceed="uploadexceed"
                 :on-change="headerchange">
                 <template #trigger>
-                    <img :src="head" style="width: 100%;" />
+                    <img :src="head" style="width: 100%; height: 100%;" />
                 </template>
                 <template #tip>
                     <div style="font-size: 15px;color: red;">

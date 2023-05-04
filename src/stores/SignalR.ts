@@ -7,12 +7,12 @@ export interface methodGroup {
 export const SignalR = defineStore('signalr', {
     state: () => {
         return {
-            conn: new signalr.HubConnectionBuilder().withUrl('http://10.40.77.188:32770/chathub').build(),
+            conn: new signalr.HubConnectionBuilder().withUrl('http://127.0.0.1:32770/chathub').build(),
         }
     },
     actions: {
         Build() {
-            this.conn = new signalr.HubConnectionBuilder().withUrl('http://10.40.77.188:32770/chathub',
+            this.conn = new signalr.HubConnectionBuilder().withUrl('http://127.0.0.1:32770/chathub',
                 {
                     headers: {
                         'Authorization': localStorage.getItem('MyBlogJwt') as string

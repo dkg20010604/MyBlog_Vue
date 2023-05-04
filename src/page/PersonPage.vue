@@ -1,7 +1,8 @@
 <template>
     <el-row class="boder" :gutter="20">
         <el-col :span="6" :offset="4">
-            <el-card shadow="hover" :body-style="{ padding: '20px' }">
+            <el-card style="cursor: pointer;" shadow="hover" :body-style="{ padding: '20px' }"
+                @click="GetList('articleview')">
                 <div class="cardbody">
                     <div class="bodyicon">
                         <notebook-one theme="two-tone" size="60" :fill="['#929292', '#ee410c']" :strokeWidth="3" />
@@ -15,7 +16,8 @@
 
         </el-col>
         <el-col :span="6" :offset="4">
-            <el-card shadow="hover" :body-style="{ padding: '20px' }">
+            <el-card style="cursor: pointer;" @click="GetList('commentview')" shadow="hover"
+                :body-style="{ padding: '20px' }">
                 <div class="cardbody">
                     <div class="bodyicon">
                         <topic theme="two-tone" size="60" :fill="['#929292', '#ee410c']" :strokeWidth="2" />
@@ -55,6 +57,17 @@ import type { EChartsType } from 'echarts';
 import { UserClient } from '@/controller'
 import { useRouter } from 'vue-router';
 const signalr = SignalR().conn;
+const router = useRouter()
+const GetList = (name: string) => {
+    router.push({
+        name: name,
+        params: {
+            pageIndex: 1,
+            userid: localStorage.getItem('MyBlogUserId'),
+            type: 0
+        }
+    })
+}
 const viewoption = {
     title: {
         text: '您最受欢迎的文章'

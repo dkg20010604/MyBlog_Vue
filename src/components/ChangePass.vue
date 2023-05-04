@@ -20,12 +20,12 @@
 </template>
     
 <script lang='ts' setup>
-import type { ValueTupleOfStringAndString } from '@/controller';
+import type { PasswordGroup } from '@/controller';
 import { UserClient } from '@/controller'
 import { ElMessage, type FormRules } from 'element-plus';
 import { useRouter } from 'vue-router'
 const user = new UserClient()
-const passgroup = reactive<ValueTupleOfStringAndString>({
+const passgroup = reactive<PasswordGroup>({
     oldPass: '',
     newPass: ''
 })
