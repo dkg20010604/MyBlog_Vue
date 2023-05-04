@@ -33,13 +33,20 @@
             </el-descriptions-item>
             <el-descriptions-item>
                 <template #label>
-                    <el-popover placement="bottom" trigger="hover" content="">
+                    <el-popover placement="bottom" trigger="hover" style="width: auto">
                         <template #reference>
-                            <el-avatar style="display: flex;" :size="50" shape="circle" :src="headimg"
+                            <el-avatar style=" display: flex;" :size="50" shape="circle" :src="headimg"
                                 fit="fill"></el-avatar>
                         </template>
-                        <div class="userOperate">
+                        <div
+                            style="display: flex;align-items: center;justify-self: center;flex-direction: column;width: auto;">
                             <el-button type="danger" @click="loginout">注销</el-button>
+
+                            <el-switch active-text="审核开启" inactive-text="审核关闭" v-model="isChickComment" :active-value="true"
+                                :inactive-value="false" @change="changeChick">
+                            </el-switch>
+
+
                         </div>
                     </el-popover>
                 </template>
@@ -54,40 +61,39 @@
     
 <script lang='ts' setup>
 import type { UserDTO } from '@/controller';
-import { PictureClient } from '@/controller'
+import { PictureClient, UserClient } from '@/controller'
 import { People, Globe, Mail, SunOne, Moon, Sun } from '@icon-park/vue-next'
 import { useRouter } from 'vue-router'
 import { toggleDark } from '@/UseDark'
 import { MenuIndex } from '@/stores/MenuStore'
 const Router = useRouter()
 const store = MenuIndex()
+const userc = new UserClient()
 const info = defineProps<{ User: UserDTO }>()
 const headimg = ref()
 const loginout = () => {
     localStorage.clear()
     Router.replace('/')
 }
-onBeforeMount(async () => {
-    try {
-        new PictureClient().getHeader().then(res => {
-            store.userinfo.userImg = URL.createObjectURL(res.data)
-            headimg.value = store.userinfo.userImg
-        }).catch(() => {
-            console.log("将要重定向");
-
-            // Router.replace('/')
-        })
-    } catch (error) {
-        console.log(error);
-    }
-
-})
 const isdark = ref(true)
 const usedark = () => {
     toggleDark()
     isdark.value = !isdark.value
 }
+const isChickComment = ref(false)
 onMounted(() => {
+    new PictureClient().getHeader().then(res => {
+        store.setUserHeaderImg(URL.createObjectURL(res.data))
+        console.log(store.userinfo.userImg);
+        headimg.value = store.userinfo.userImg
+    }).catch((err) => {
+        console.log(err);
+
+        // Router.replace('/')
+    })
+    userc.getCommentChick().then(res => {
+        isChickComment.value = res.data
+    })
     const doc = document.getElementById('Onlyhtml');
     console.log(doc?.classList);
     if (doc?.classList.contains('dark'))
@@ -96,15 +102,19 @@ onMounted(() => {
         isdark.value = true
 
 })
+const changeChick = () => {
+    userc.setCommentChick(isChickComment.value).then(res => {
+        if (res.code == 200)
+            ElMessage.success(res.message)
+        else
+            ElMessage.error(res.message)
+    }).catch((err) => {
+        ElMessage.error('操作失败')
+    })
+}
 </script>
     
 <style scoped>
-.headerMain {}
-
-.userOperate {
-    display: flex;
-}
-
 .headerdetiel {
     display: flex;
 }
