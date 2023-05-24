@@ -54,7 +54,7 @@ import { SignalR } from '@/stores/SignalR'
 import * as echarts from 'echarts';
 import { NotebookOne, Topic } from '@icon-park/vue-next'
 import type { EChartsType } from 'echarts';
-import { UserClient } from '@/controller'
+import { UserClient, ArticleClient } from '@/controller'
 import { useRouter } from 'vue-router';
 const signalr = SignalR().conn;
 const router = useRouter()
@@ -195,7 +195,7 @@ onBeforeMount(async () => {
     typelist.value = echarts.init(document.getElementById('typelistcharts') as HTMLElement);
     viewlist.value.setOption(viewoption)
     typelist.value.setOption(goodoption)
-    numb.value = (await userc.getArsComms()).data as number[]
+    numb.value = (await new ArticleClient().getArsComms()).data as number[]
 
 })
 

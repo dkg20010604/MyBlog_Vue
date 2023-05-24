@@ -26,10 +26,10 @@ import { onBeforeMount, onMounted, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { SignalR, type methodGroup } from '@/stores/SignalR'
 import HeaderIndex from '@/components/HeaderIndex.vue'
-import { UserClient, LoginClient, PictureClient } from '@/controller'
+import { UserClient, LoginClient } from '@/controller'
 const router = useRouter()
 const lo = new LoginClient()
-const pic = new PictureClient()
+const pic = new UserClient()
 watch(() => MenuIndex().index,
     (val, old) => {
         if (val == 'adminuser')
@@ -96,7 +96,7 @@ watch(() => MenuIndex().index,
             })
         }
     });
-onMounted(async () => {
+onBeforeMount(async () => {
     const meth: methodGroup[] = [
         {
             method: (data) => {
@@ -121,23 +121,30 @@ onMounted(async () => {
             method: data => {
                 ElMessage.info(data)
             }
+        },
+        {
+            name: 'outlogin',
+            method: () => {
+                router.replace('/')
+                localStorage.clear()
+            }
         }
     ]
-    await lo.islogin().then(async (res) => {
-        console.log(res);
-        SignalR().Build()
-        meth.forEach(item => {
-            SignalR().conn.on(item.name, item.method)
-        })
-        await SignalR().conn.start()
-    })
-})
-onBeforeMount(async () => {
-    await new UserClient().getUserByJwt().then(res => {
-        MenuIndex().userinfo = res.data
-        pic.getHeader().then(res => {
-            MenuIndex().setUserHeaderImg(URL.createObjectURL(res.data))
-        })
+    await new LoginClient().getByJwt().then(async (res) => {
+        if (res.code == 200) {
+            MenuIndex().userinfo = res.data
+            pic.getHeader().then(res => {
+                MenuIndex().setUserHeaderImg(URL.createObjectURL(res.data))
+            })
+            SignalR().Build()
+            meth.forEach(item => {
+                SignalR().conn.on(item.name, item.method)
+            })
+            await SignalR().conn.start()
+        }
+        else {
+            router.replace('/');
+        }
     })
 })
 </script>

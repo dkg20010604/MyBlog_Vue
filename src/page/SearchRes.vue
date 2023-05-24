@@ -29,22 +29,22 @@
         <el-pagination background layout="prev, pager, next" :page-size="searchpage.pageSize" :total="searchpage.total"
             @current-change="ChangePage" v-model:current-page="searchpage.pageindex" />
     </div>
-    <router-view></router-view>
 </template>
     
 <script lang='ts' setup>
 import type { PageDataOfArticleDTO } from '@/controller'
-import { ArticleClient } from '@/controller'
+import { ArticleClient, TagsClient } from '@/controller'
 import { useRouter, useRoute } from 'vue-router'
 const router = useRouter();
 const route = useRoute();
 const searchpage = ref<PageDataOfArticleDTO>()
 const searchclient = new ArticleClient()
-const querystring = ref(route.params.query as string);
+const tagsc = new TagsClient()
+const querystring = ref('');
 const type = ref(route.params.type as unknown as number)
 const pageSize = 20
 const pageindex = ref(route.params.pageIndex as unknown as number)
-const search = (type: number) => {
+const search = async (type: number) => {
     router.push({
         name: 'searchartticle',
         params: {
@@ -53,6 +53,18 @@ const search = (type: number) => {
             query: querystring.value
         }
     })
+    if (type == 0) {
+        await searchclient.getAllArticle(1, pageSize, querystring.value)
+            .then(res => {
+                searchpage.value = res.data
+            })
+    }
+    else {
+        await tagsc.searchByTags(1, pageSize, querystring.value)
+            .then(res => {
+                searchpage.value = res
+            })
+    }
 }
 const clickcard = (id: number) => {
     router.push({
@@ -79,36 +91,24 @@ const ChangePage = (index: number) => {
             })
     }
     else {
-        searchclient.searchByTags(index, pageSize, querystring.value)
+        tagsc.searchByTags(index, pageSize, querystring.value)
             .then(res => {
                 searchpage.value = res
             })
     }
 }
-watch(
-    () => route.params,
-    (val, old) => {
-
-        if (!route.name?.toString().endsWith('searchartticle')) {
-            return;
-        }
-        type.value = route.params.type as unknown as number
-        pageindex.value = route.params.pageIndex as unknown as number
-
-        if (type.value == 0) {
-            searchclient.getAllArticle(val.pageIndex as unknown as number, pageSize, querystring.value)
-                .then(res => {
-                    searchpage.value = res.data
-                })
-        }
-        else {
-            searchclient.searchByTags(val.pageIndex as unknown as number, pageSize, querystring.value)
-                .then(res => {
-                    searchpage.value = res
-                })
-        }
+onMounted(async () => {
+    if (route.params.query == ' ') {
+        await searchclient.getCommend().then(res => {
+            searchpage.value = {
+                pageindex: 1,
+                pageSize: 20,
+                total: 0,
+                data: res.data
+            }
+        })
     }
-)
+})
 </script>
     
 <style scoped>

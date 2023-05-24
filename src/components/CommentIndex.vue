@@ -32,8 +32,7 @@
                                 <div class="response">
                                     <el-input :key="componentKey" ref="epin"
                                         v-if="item.writeresponse && item.recomm?.commentText?.length != undefined"
-                                        v-model="retext" size="default" clearable
-                                        @change="change(item.recomm as CommentDTO)">
+                                        v-model="retext" size="default" clearable>
                                     </el-input>
                                 </div>
                                 <el-button text bg type="primary" size="default" @click="sendmessage(item)">{{
@@ -77,12 +76,12 @@ const epin = ref()
 const order = reactive<detie[]>(OrIndex.comments as detie[])
 onBeforeMount(async () => {
     order.forEach(async value => {
-        const res = (await new PictureClient().getHeadById(value.userId as number))
+        const res = (await new UserClient().getHeadById(value.userId as number))
         value.recomm = {
             commentText: '',
             writerComment: false,
             headimg: '',
-        } as CommentDTO
+        } as unknown as CommentDTO
         value.headimg = URL.createObjectURL(res.data)
     })
 
@@ -91,10 +90,6 @@ const showPopover = async (id: number) => {
     userinfo.value = (await new UserClient().getUserInfoById(id)).data
 }
 const retext = ref('');
-const change = (item: CommentDTO) => {
-    console.log(item.commentText);
-
-}
 const sendmessage = async (item: detie) => {
     componentKey.value++;
     item.recomm = {
@@ -111,12 +106,11 @@ const sendmessage = async (item: detie) => {
         }
         item.recomm.commentText = retext.value
         ElMessage.info('正在发送')
-        console.log(item.recomm);
 
         await client.addComment(item.recomm).then(data => {
             if (data.code == 200) {
                 ElMessage.success('发送成功')
-                item.recomm = '' as CommentDTO
+                item.recomm = '' as unknown as CommentDTO
                 retext.value = ''
             }
             else {
@@ -130,7 +124,6 @@ const sendmessage = async (item: detie) => {
 }
 const getresponst = async (item: detie) => {
     item.children = (await client.getResponse(item.commend as number)).data
-    console.log(item.children);
 }
 const likeComment = async (id: number) => {
     await client.upLike(id).then(res => {

@@ -105,6 +105,11 @@ const router = createRouter({
           path: '/admincomment/:pageIndex/:status',
           component: () => import('@/AdminPage/AdminComment.vue'),
           name: 'admincomment'
+        },
+        {
+          path: '/customer/:id',
+          component: () => import('@/page/CustomerPage.vue'),
+          name: 'CustomerPage'
         }
       ]
     },

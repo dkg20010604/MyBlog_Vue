@@ -11,14 +11,19 @@
             </template>
         </el-input>
     </div>
-    <div class="reslist" v-if="showres" style="padding: 10px;">
+    <div class="reslist" style="padding: 10px;">
         <el-scrollbar v-infinite-scroll="LoadMore" infinite-scroll-immediate="false" style="width: 90%;">
             <div style="display: flex; flex-wrap: wrap;">
                 <el-card v-for="user in userres" style="width:45%;margin: 20px;cursor: pointer" shadow="hover"
-                    :body-style="{ padding: '20px' }">
+                    :body-style="{ padding: '20px' }" @click="router.push({
+                        name: 'CustomerPage',
+                        params: {
+                            id: user.id
+                        }
+                    })">
                     <div style="display: flex;flex-direction: row">
-                        <el-avatar icon="el-icon-user-solid" :size="60" shape="circle" :src="user.userImg"
-                            fit="fill"></el-avatar>
+                        <el-avatar icon="el-icon-user-solid" :size="60" shape="circle"
+                            :src="headeclient.baseUrl + '/api/Picture/path/' + user.userImg" fit="fill"></el-avatar>
                         <div style="display: flex;margin-left: 16px; flex-direction: column">
                             <div style="font-size: 20px;"><b>{{ user.nickName }}</b></div>
                             <div style="display: flex;">
@@ -30,9 +35,6 @@
                 </el-card>
             </div>
         </el-scrollbar>
-    </div>
-    <div v-else>
-        <p>暂无数据</p>
     </div>
 </template>
     
@@ -88,46 +90,6 @@ const LoadMore = () => {
             userres.value?.push(item)
         })
     })
-}
-watch(
-    () => route.params,
-    (val, old) => {
-        if (!route.name?.toString().endsWith('searchuser')) {
-            return;
-        }
-        else {
-
-            if (type.value == 0) {
-                userclient.searchUser(query.value)
-                    .then(res => {
-                        if (res.code == 200) {
-                            userres.value?.push(res.data)
-                            showres.value = true
-                        }
-                    })
-            }
-            else {
-                userclient.searchUsersByNickname(val.pageIndex as unknown as number, 20, query.value)
-                    .then(res => {
-                        if (res.code == 200) {
-                            userres.value = res.data
-                            showres.value = true
-                        }
-                        else {
-                            ElMessage.warning(res.message)
-                        }
-                    })
-            }
-        }
-    }
-)
-const getheader = (path: string): string => {
-    let bloburl = '';
-    new PictureClient().getHeadByPath(path).then(res => {
-        const url = URL.createObjectURL(res.data);
-        bloburl = url;
-    })
-    return bloburl as string;
 }
 </script>
     

@@ -3,17 +3,19 @@
         <div style="width: 30%;background-color:beige;padding:5px 0px">
             <el-card @click="StartChat(index)" style="margin-top: 2px;" v-for="(item, index ) in Firends" shadow="hover"
                 :body-style="{ padding: '5px' }" :class="{ 'whthchatclass': item.withchat }">
-                <div style="display: flex;align-items: center">
-                    <el-avatar :src="item.headimg" icon="el-icon-user-solid" size="default" shape="circle"
-                        fit="fill"></el-avatar>
-                    <p style="margin-left: 20px;">{{ item.nickName }}</p>
-                </div>
+                <el-badge :is-dot="true" :hidden="false" type="primary">
+                    <div style="display: flex;align-items: center">
+                        <el-avatar :src="item.headimg" icon="el-icon-user-solid" size="default" shape="circle"
+                            fit="fill"></el-avatar>
+                        <p style="margin-left: 20px;">{{ item.nickName }}</p>
+                    </div>
+                </el-badge>
             </el-card>
         </div>
         <div style="width: 70%; background-color:darkgrey;padding:5px 0px;">
             <el-card style="width: 100%;height: 99%;" shadow="always" :body-style="{
-                    padding: '10px', height: '80%', flexDirection: 'row', alignContent: 'flex-end'
-                }">
+                padding: '10px', height: '80%', flexDirection: 'row', alignContent: 'flex-end'
+            }">
                 <template #header>
                     <span>{{ withchat?.nickName }}</span>
                 </template>
@@ -63,7 +65,7 @@ interface detie extends UserDTO {
     writeresponse?: boolean
     headimg?: string;
     withchat?: boolean;
-    UnRead?: number;
+    UnRead?: boolean;
     isunread?: boolean
 }
 let chatting = 0;
@@ -83,7 +85,7 @@ onBeforeMount(() => {
     })
 })
 onMounted(() => {
-    SignalR().conn.on('receivenewchat', (data) => {
+    SignalR().conn.on('receivenewchat', (data: ChatDTO) => {
         ElMessage.success("聊天页面收到消息")
         if (data.sendId == Firends.value[chatting].id) {
             chatlist.value?.push(data)
@@ -98,7 +100,6 @@ const StartChat = async (item: number) => {
     const res = await chatinfo.getChat(Firends.value[item].id as number, pageindex, 20)
     Firends.value[chatting].withchat = false
     Firends.value[item].withchat = true
-    console.log(res);
     chatlist.value = res.data?.data
     chatting = item
     withchat.value = Firends.value[item]
@@ -107,7 +108,6 @@ const StartChat = async (item: number) => {
 const sendbutton = async (userid: number) => {
     const res = await chatinfo.sendMessage(userid, sendmessage.value);
     if (res.code == 200) {
-        console.log(res);
         ElMessage.success('发送成功')
         sendmessage.value = ''
         chatlist.value?.push(res.data)
@@ -119,7 +119,6 @@ onUpdated(() => {
         document.getElementById('chatlistof0')?.addEventListener('mouseenter', async () => {
             const res = await chatinfo.getChat(Firends.value[chatting].id as number, pageindex, 20)
             pageindex++;
-            console.log(res);
             chatlist.value?.forEach(item => {
                 res.data.data.push(item)
             })

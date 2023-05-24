@@ -3,16 +3,14 @@
         <div style="display: flex;padding: 16px;">
             <div>
                 <label>用户身份：</label>
-                <el-select v-model="userType" @change="changeselect">
-                    <el-option :key=0 label="所有" :value=0 />
-                    <el-option v-for="item in type" :key="item.key" :value="item.key">{{ item.name }}</el-option>
+                <el-select v-model="userType" value-key="id" @change="changeselect">
+                    <el-option v-for="item in type" :key="item.id" :label="item.label" :value="item"></el-option>
                 </el-select>
             </div>
             <div style="margin-left: 48px;">
                 <label>用户状态：</label>
-                <el-select v-model="userStatus" @change="changeselect">
-                    <el-option :key=3 label="所有" :value=3 />
-                    <el-option v-for="item in status" :key="item.key" :label="item.name" :value="item.key" />
+                <el-select v-model="userStatus" value-key="id" @change="changeselect">
+                    <el-option v-for="item in status" :key="item.id" :label="item.label" :value="item" />
                 </el-select>
             </div>
         </div>
@@ -64,14 +62,14 @@
             <div style="display: flex;padding: 16px;">
                 <div>
                     <label>用户身份：</label>
-                    <el-select v-model="waiteChangeUser.roleId">
-                        <el-option v-for="item in type" :key="item.key" :label="item.name" :value="item.key" />
+                    <el-select v-model="waiteChangeUser.roleId" value-key="id">
+                        <el-option v-for="item in changeType" :key="item.id" :label="item.label" :value="item.id" />
                     </el-select>
                 </div>
                 <div style="margin-left: 48px;">
                     <label>用户状态：</label>
-                    <el-select v-model="waiteChangeUser.status">
-                        <el-option v-for="item in status" :key="item.key" :label="item.name" :value="item.key" />
+                    <el-select v-model="waiteChangeUser.status" value-key="id">
+                        <el-option v-for="item in changeStatus" :key="item.id" :label="item.label" :value="item.id" />
                     </el-select>
                 </div>
             </div>
@@ -117,9 +115,7 @@
                         <el-button>取消</el-button>
                     </el-form-item>
                 </el-form>
-
             </div>
-
         </div>
     </el-dialog>
 </template>
@@ -134,42 +130,74 @@ const router = useRouter()
 const route = useRoute()
 const showdialog = ref(false)
 interface Usertype {
-    key: number,
-    name: string
+    id: number,
+    label: string
 }
 const AdminFormRule = reactive<FormRules>({
 
 })
 const type = reactive<Usertype[]>([
     {
-        key: 1,
-        name: '管理员'
+        id: 0,
+        label: '所有'
     },
     {
-        key: 2,
-        name: '普通用户'
+        id: 1,
+        label: '管理员'
     },
     {
-        key: 3,
-        name: '小黑屋'
+        id: 2,
+        label: '普通用户'
+    },
+    {
+        id: 3,
+        label: '小黑屋'
     }
 ])
 const status = reactive<Usertype[]>([
     {
-        key: 0,
-        name: '正常'
+        id: 3,
+        label: '全部'
     },
     {
-        key: 1,
-        name: '待注销'
+        id: 0,
+        label: '正常'
     },
     {
-        key: 2,
-        name: '已注销'
+        id: 1,
+        label: '待注销'
+    },
+    {
+        id: 2,
+        label: '已注销'
     }
 ])
-const userType = ref(0)
-const userStatus = ref(3)
+const changeType = reactive<Usertype[]>([
+    {
+        id: 1,
+        label: '管理员'
+    },
+    {
+        id: 2,
+        label: '普通用户'
+    },
+    {
+        id: 3,
+        label: '小黑屋'
+    }
+])
+const changeStatus = reactive<Usertype[]>([
+    {
+        id: 0,
+        label: '正常'
+    },
+    {
+        id: 2,
+        label: '已注销'
+    }
+])
+const userType = ref<Usertype>()
+const userStatus = ref<Usertype>()
 const paegIndex = ref(1)
 onBeforeMount(async () => {
     await log.admin().then(res => {
@@ -186,7 +214,7 @@ const InfoList = ref(reactive<PageDataOfAdminUserDTO>({
     data: []
 }))
 const changeselect = async () => {
-    await admin.getUser(1, userType.value, userStatus.value).then(res => {
+    await admin.getUser(1, userType.value?.id as number, userStatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -194,8 +222,8 @@ const changeselect = async () => {
                 name: 'adminuser',
                 params: {
                     pageIndex: route.params.pageIndex as unknown as number,
-                    userType: userType.value,
-                    userStatus: userStatus.value
+                    userType: userType.value?.id,
+                    userStatus: userStatus.value?.id
                 }
             })
         }
@@ -212,10 +240,12 @@ const DelectUser = async (id: number) => {
     })
 }
 onMounted(async () => {
-    userType.value = route.params.userType as unknown as number;
-    userStatus.value = route.params.userStatus as unknown as number;
+    userType.value = type.find(a => a.id == route.params.userType as unknown as number);
+    userStatus.value = status.find(a => a.id == route.params.userStatus as unknown as number);
+    console.log(userType.value);
+    console.log(userStatus.value);
     paegIndex.value = route.params.pageIndex as unknown as number
-    await admin.getUser(paegIndex.value, userType.value, userStatus.value).then(res => {
+    await admin.getUser(paegIndex.value, userType.value?.id as number, userStatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -237,7 +267,7 @@ const waiteChangeUser = ref<AdminUserDTO>({
     status: 0
 })
 const showuserdialog = async (user: UserDTO) => {
-    await admin.getUserById(user.id).then(res => {
+    await admin.getUserById(user.id as number).then(res => {
         if (res.code == 200) {
             waiteChangeUser.value = res.data
             showdialog.value = true
@@ -245,7 +275,7 @@ const showuserdialog = async (user: UserDTO) => {
     })
 }
 const ChangePageIndex = async (val: number) => {
-    await admin.getUser(val, userType.value, userStatus.value).then(res => {
+    await admin.getUser(val, userType.value?.id as number, userStatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -253,8 +283,8 @@ const ChangePageIndex = async (val: number) => {
                 name: 'adminuser',
                 params: {
                     pageIndex: val,
-                    userType: userType.value,
-                    userStatus: userStatus.value
+                    userType: userType.value?.id,
+                    userStatus: userStatus.value?.id
                 }
             })
         }
@@ -270,7 +300,7 @@ const SaveUser = async (e: MouseEvent) => {
 
 }
 const ReSetPassword = async () => {
-    await admin.changgeUser(waiteChangeUser.value.id, '123456789').then(res => {
+    await admin.changgeUser(waiteChangeUser.value.id as number).then(res => {
         if (res.code == 200)
             ElMessage.success(res.message)
         else {
@@ -283,6 +313,9 @@ const ReSetPassword = async () => {
 const clearHeader = () => {
     waiteChangeUser.value.userImg = ''
     ElMessage.info('点击保存生效')
+}
+const putBlackRoom = () => {
+
 }
 </script>
     

@@ -1,10 +1,9 @@
 <template>
   <div style="width: 99%;">
     <!-- 作者信息区 -->
-    <div style="display: flex;">
+    <div>
 
-      <ArticleHeader v-if="ArticleInfo.userId && isfollow != null" :id="ArticleInfo?.userId as number"
-        :isfollow="isfollow">
+      <ArticleHeader style="margin-top: 16px;" v-if="showHeader" :id="ArticleInfo.userId">
       </ArticleHeader>
     </div>
     <!-- 文档区 -->
@@ -13,7 +12,7 @@
         <!-- 目录部分 -->
         <el-col :xs="24" :sm="24" :md="8" :lg="4" class="MdMenu">
           <div>
-            <el-affix class="menus" target=".MdMenu" :offset="160">
+            <el-affix class="menus" target=".MdMenu" :offset="220">
               <div v-for="anchor in catalogue" :style="{ padding: `10px 0 10px ${anchor.indent * 20}px` }"
                 @click="scrollTop(anchor)">
                 <a style="cursor: pointer;">{{ anchor.title }}</a>
@@ -54,14 +53,14 @@
     <!-- 看评论 -->
     <div style="z-index: 500;position: relative;">
       <CommentIndex v-if="comment?.length as number > 0" :comments="comment as CommentDTO[]" />
-      <span class="com" v-else>还没有评论</span>
+      <span class='com' v-else>还没有评论</span>
     </div>
 
   </div>
 </template>
   
 <script lang='ts' setup>
-import { ArticleClient, CollectionAndLikeClient, FriendClient, CommentClient, type ArticleDTO, type CommentDTO } from '@/controller'
+import { ArticleClient, LikeClient, CollectionClient, FriendClient, CommentClient, type ArticleDTO, type CommentDTO } from '@/controller'
 import { GoodTwo, Star } from '@icon-park/vue-next'
 import { useRoute } from 'vue-router';
 import ArticleHeader from '@/components/ArticleHeader.vue'
@@ -70,13 +69,11 @@ import { ElMessage } from 'element-plus';
 const art = new ArticleClient()
 const fir = new FriendClient();
 const comm = new CommentClient();
-const coll = new CollectionAndLikeClient()
+const coll = new CollectionClient()
+const like = new LikeClient()
 const route = useRoute()
-
-const writerComment = reactive<CommentDTO>({
-  userId: 0,
-  commentText: '',
-})
+// const ArticleHeader = defineAsyncComponent(() => import('@/components/ArticleHeader.vue'))
+const writerComment = reactive<CommentDTO>({})
 // 发送评论按钮
 const sendcomment = async (IsResponse: boolean, responseid?: number) => {
   writerComment.isResponse = IsResponse
@@ -95,12 +92,23 @@ const sendcomment = async (IsResponse: boolean, responseid?: number) => {
   await getcomment();
 
 }
-const ArticleInfo = ref<ArticleDTO>({ likeNumber: 0, collection: 0 })
+const ArticleInfo = ref<ArticleDTO>({
+  id: 0,
+  userId: 0,
+  title: '',
+  creatTime: undefined,
+  count: 0,
+  collection: 0,
+  likeNumber: 0,
+  status: 0,
+  typeNumber: 0,
+  isTop: false,
+  tags: undefined
+})
 
-const isfollow = ref();
 const good = ref(false)
 const stars = ref(false)
-
+const showHeader = ref(false)
 const artId = route.params.id as string as unknown as number;
 const preview = ref();
 const comment = ref<CommentDTO[]>()
@@ -108,18 +116,27 @@ onBeforeMount(async () => {
   await getcomment();
 })
 const getcomment = async () => {
-  ArticleInfo.value = (await art.getById(artId)).data;
-  writerComment.articleId = artId
-  stars.value = (await coll.isCollection(ArticleInfo.value.id as number)).data as boolean
-  good.value = (await coll.islike(ArticleInfo.value.id as number)).data as boolean
-  await loadFile()
-  isfollow.value = (await fir.isFollow(ArticleInfo.value.userId as number)).data
+  art.getById(artId).then(res => {
+    ArticleInfo.value = res.data
+    showHeader.value = true
+
+    writerComment.articleId = artId
+    coll.isCollection(artId).then(res => {
+      stars.value = res.data
+    })
+    like.islike(artId).then(res => {
+      good.value = res.data
+    })
+  })
+
   comment.value = (await comm.getComment(artId)).data
+  loadFile()
 }
 const catalogue: any = ref([]);
 
-const loadFile = async () => {
-  await nextTick();
+const loadFile = () => {
+  console.log('加载菜单');
+
   const anchors = preview.value.$el.querySelectorAll("h1,h2,h3,h4,h5,h6");
 
   const titles = Array.from(anchors).filter(
@@ -146,13 +163,10 @@ const loadFile = async () => {
 // 定位内容
 const scrollTop = (anchor: any) => {
   const { lineIndex } = anchor;
-  console.log(lineIndex);
-  console.log(preview.value);
 
   const heading = (preview.value.$el as HTMLElement).querySelector(
     `[data-v-md-line="${lineIndex}"]`
   );
-  console.log(heading);
 
   if (heading) {
     heading.scrollIntoView();
@@ -163,7 +177,7 @@ const scrollOut = ref();
 //点赞按钮
 const goodclick = () => {
   if (!good.value) {
-    coll.addlike(ArticleInfo.value.id as number).then(res => {
+    like.addlike(ArticleInfo.value.id as number).then(res => {
       if (res.code == 200) {
         ElMessage.success('点赞成功')
         good.value = !good.value
@@ -178,7 +192,7 @@ const goodclick = () => {
     })
   }
   else {
-    coll.voidlike(ArticleInfo.value.id as number).then(res => {
+    like.voidlike(ArticleInfo.value.id as number).then(res => {
       if (res.code == 200) {
         ElMessage.success('取消点赞成功')
         good.value = !good.value
@@ -225,7 +239,7 @@ const starclick = () => {
   }
 }
 onMounted(async () => {
-
+  loadFile()
 })
 </script >
 

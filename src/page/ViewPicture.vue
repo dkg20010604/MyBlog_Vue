@@ -5,7 +5,7 @@
     </div>
     <div class="uparea">
         <el-upload list-type="picture-card" :action="action" ref="upload" :on-remove="removepic" :auto-upload="false"
-            multiple :limit="10" :on-preview="preview" :file-list="uppiclist" :headers="upheaders" :on-success="picsuccess">
+            multiple :limit="10" :on-preview="preview" :file-list="uppiclist" :headers="upheaders">
             <div class="addandok">
                 <el-icon>
                     <Plus></Plus>
@@ -41,10 +41,6 @@ const removepic: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
 const preview: UploadProps['onPreview'] = (uploadFile) => {
     clickimag.value = uploadFile.url!
     showimgdialog.value = true
-}
-const picsuccess: UploadProps['onSuccess'] = (response, uploadFile) => {
-    console.log(response);
-    console.log(uploadFile);
 }
 const clickimag = ref('')
 const showimgdialog = ref(false)

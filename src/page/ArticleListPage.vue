@@ -27,11 +27,11 @@
                 <template #default="info">
                     <el-button-group v-if="!ViewRubbish">
                         <el-button type="success" size="default" @click="router.push({
-                                name: 'release',
-                                params: {
-                                    id: info.row.id
-                                }
-                            })">编辑</el-button>
+                            name: 'release',
+                            params: {
+                                id: info.row.id
+                            }
+                        })">编辑</el-button>
                         <el-button type="danger" size="default" @click="DeleteArticle(info.row.id)">删除</el-button>
                     </el-button-group>
                     <el-button-group v-else>
@@ -65,17 +65,17 @@ onMounted(async () => {
     await GetPersonData(route.params.pageIndex as unknown as number);
 })
 const GetPersonData = async (pageindex: number) => {
+    ListInfo.value.data = [];
     const res = await article.getPersonalArticle(pageindex)
     if (res.code == 200) {
         ListInfo.value = res.data
-        console.log(ListInfo.value);
     }
 }
 const GetRubish = async (pageindex: number) => {
+    ListInfo.value.data = [];
     const res = await article.getPersonalArticleInRubbish(pageindex)
     if (res.code == 200) {
         ListInfo.value = res.data
-        console.log(ListInfo.value);
     }
 }
 const DeleteArticle = async (id: number) => {

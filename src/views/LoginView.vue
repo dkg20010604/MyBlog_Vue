@@ -46,7 +46,7 @@
 
                     </el-form-item>
                     <el-form-item label="头像：" class="loginitem" prop="userImg">
-                        <el-upload class="avatar-uploader" action="http://10.40.77.188:32770/api/Picture/headfile"
+                        <el-upload class="avatar-uploader" action="http://127.0.0.1:32770/api/Picture/headfile"
                             :show-file-list="false" :on-success="imgsuccess" :before-upload="beforeup">
                             <img v-if="userimg" :src="userimg" class="avatar" />
                             <el-icon v-else class="avatar-uploader-icon">
@@ -144,11 +144,16 @@ const regbutton = async (formEl: FormInstance | undefined) => {
     await formEl.validate(async (valid) => {
         if (valid) {
             // 填写完成 开始邮箱验证
-            email.sendSecure(reginfo.account).then(res => {
+            email.sendSecure({
+                account: reginfo.account,
+                code: reginfo.nickName
+            }).then(res => {
                 if (res.code == 200) {
                     ElMessage.success('发送成功，请注意查收')
                     showdialog.value = true
                     vircode.account = reginfo.account
+                } else {
+                    ElMessage.error(res.message)
                 }
             }).catch(() => {
                 ElMessage.error('发送失败')
@@ -242,6 +247,7 @@ onMounted(() => {
     align-items: center;
 
 }
+
 .loginitem {
     margin: 20px;
 }

@@ -12,8 +12,8 @@
       <el-table-column prop="userNickName" label="用户昵称" width="180" />
       <el-table-column prop="userHeaderImg" label="头像" width="180">
         <template #default="img">
-          <el-image :src="'http://10.40.77.188:32770/api/Picture/path/' + img.row.userHeaderImg" fit="fill"
-            :lazy="true"></el-image>
+          <el-avatar icon="el-icon-user-solid" size="large" shape="circle"
+            :src="'http://127.0.0.1:32770/api/Picture/path/' + img.row.userHeaderImg" fit="fill"></el-avatar>
         </template>
       </el-table-column>
       <el-table-column prop="commentText" label="内容" width="180" />
@@ -85,7 +85,7 @@ const setcomment = async (id: number, ispass: boolean) => {
     else {
       ElMessage.error(res.message)
     }
-  }).catch(err=>{
+  }).catch(err => {
     ElMessage.error("网络错误")
   })
 }

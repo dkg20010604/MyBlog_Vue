@@ -34,24 +34,28 @@
 </template>
     
 <script lang='ts' setup>
-import { UserClient, PictureClient, type ChangeUserInfoAble } from '@/controller'
+import { UserClient, LoginClient, PictureClient, type ChangeUserInfoAble } from '@/controller'
 import { genFileId, type UploadInstance, type UploadProps, type UploadRawFile } from 'element-plus';
 const usercli = new UserClient()
 const pic = new PictureClient()
 const head = ref('')
-const info = ref<ChangeUserInfoAble>({})
+const info = ref<ChangeUserInfoAble>({
+    nickName: '',
+    inyro: undefined,
+    userImg: '',
+    address: ''
+})
 const changeheader = ref(false)
 onMounted(() => {
-    usercli.getUserByJwt().then(res => {
+    new LoginClient().getByJwt().then(res => {
         info.value = res.data;
-        pic.getHeader().then(respone => {
+        usercli.getHeader().then(respone => {
             head.value = URL.createObjectURL(respone.data)
         })
     })
 })
 const changgeinfo = () => {
     if (!changeheader.value) {
-        console.log('未修改头像');
         usercli.upDataUser(info.value).then(res => {
             if (res.code == 200)
                 ElMessage.success(res.message)
@@ -60,17 +64,15 @@ const changgeinfo = () => {
         })
     }
     else {
-        console.log('修改了头像');
         headerupload.value?.submit()
     }
 }
-const headerchange: UploadProps['onChange'] = (file, files) => {
+const headerchange: UploadProps['onChange'] = (file) => {
     changeheader.value = true
     head.value = URL.createObjectURL(file.raw!.slice())
 }
 const headerupload = ref<UploadInstance>()
-const successchangeheader: UploadProps['onSuccess'] = (response, file) => {
-    console.log('');
+const successchangeheader: UploadProps['onSuccess'] = (response) => {
 
     info.value.userImg = response.data
     usercli.upDataUser(info.value).then(res => {

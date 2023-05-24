@@ -27,12 +27,12 @@
     
 <script lang='ts' setup>
 import type { ArticleDTO, PageDataOfArticleDTO, TagDTO } from '@/controller';
-import { CollectionAndLikeClient } from '@/controller'
+import { CollectionClient } from '@/controller'
 import type { ElTable } from 'element-plus';
 import { useRouter } from 'vue-router'
 const router = useRouter()
 const InfoTable = ref<InstanceType<typeof ElTable>>()
-const collectclient = new CollectionAndLikeClient()
+const collectclient = new CollectionClient()
 const collectionList = ref<PageDataOfArticleDTO>()
 const GetCollection = async (pageIndex: number) => {
     await collectclient.getCollection(pageIndex).then(res => {

@@ -2,9 +2,8 @@
     <div style="padding: 16px;">
         <div style="display: flex;padding: 16px;">
             <label>评论状态：</label>
-            <el-select v-model="Commentstatus" @change="changeselect">
-                <el-option :key=4 label="所有" :value=4 />
-                <el-option v-for="item in status" :key="item.key" :label="item.name" :value="item.key" />
+            <el-select v-model="Commentstatus" value-key="id" @change="changeselect">
+                <el-option v-for="item in status" :key="item.id" :label="item.label" :value="item" />
             </el-select>
         </div>
 
@@ -27,10 +26,14 @@
             </el-table-column>
             <el-table-column label="状态">
                 <template #default="info">
-                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 0" color="#00C9A7">正常</el-tag>
-                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 1" color="#FBEAFF">审核中</el-tag>
-                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 2" color="#B39CD0">未通过</el-tag>
-                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 3" color="#845EC2">不可见</el-tag>
+                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 0"
+                        color="#00C9A7">正常</el-tag>
+                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 1"
+                        color="#D621EA">审核中</el-tag>
+                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 2"
+                        color="#A90000">未通过</el-tag>
+                    <el-tag effect="dark" size="large" hit v-if="((info.row.articleId as number) % 10) == 3"
+                        color="#845EC2">不可见</el-tag>
                 </template>
 
             </el-table-column>
@@ -44,11 +47,11 @@
                             </template>
                         </el-popconfirm>
                         <el-button type="success" size="default" @click="router.push({
-                                name: 'viewpage',
-                                params: {
-                                    id: Math.floor((button.row.articleId as number) / 10)
-                                }
-                            })">查看文章</el-button>
+                            name: 'viewpage',
+                            params: {
+                                id: Math.floor((button.row.articleId as number) / 10)
+                            }
+                        })">查看文章</el-button>
                         <div v-if="((button.row.articleId as number) % 10) != 3">
                             <el-popconfirm title="(除管理员外任何人无法查看)是否继续?" @confirm="serCommentStatus(button.row.commend, 3)">
                                 <template #reference>
@@ -81,28 +84,32 @@ const log = new LoginClient()
 const router = useRouter()
 const route = useRoute()
 interface Usertype {
-    key: number,
-    name: string
+    id: number,
+    label: string
 }
 const status = reactive<Usertype[]>([
     {
-        key: 0,
-        name: '正常'
+        id: 4,
+        label: '所有'
     },
     {
-        key: 1,
-        name: '审核中'
+        id: 0,
+        label: '正常'
     },
     {
-        key: 2,
-        name: '未通过'
+        id: 1,
+        label: '审核中'
     },
     {
-        key: 3,
-        name: '不可见'
+        id: 2,
+        label: '未通过'
+    },
+    {
+        id: 3,
+        label: '不可见'
     }
 ])
-const Commentstatus = ref(3)
+const Commentstatus = ref<Usertype>()
 const paegIndex = ref(1)
 onBeforeMount(async () => {
     await log.admin().then(res => {
@@ -116,10 +123,11 @@ const InfoList = ref(reactive<PageDataOfCommentCheck>({
     pageindex: 0,
     pageSize: 0,
     total: 0,
-    data: undefined
+    data: []
 }))
 const changeselect = async () => {
-    await admin.getCommentByStatus(1, Commentstatus.value).then(res => {
+    console.log(Commentstatus.value);
+    await admin.getCommentByStatus(1, Commentstatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -127,17 +135,18 @@ const changeselect = async () => {
                 name: 'admincomment',
                 params: {
                     pageIndex: 1,
-                    status: Commentstatus.value
+                    status: Commentstatus.value?.id
                 }
             })
         }
     })
 }
 onMounted(async () => {
-
-    Commentstatus.value = route.params.status as unknown as number;
+    
+    
+    Commentstatus.value = status.find(a => a.id == route.params.status as unknown as number) as Usertype;
     paegIndex.value = route.params.pageIndex as unknown as number
-    await admin.getCommentByStatus(paegIndex.value, Commentstatus.value).then(res => {
+    await admin.getCommentByStatus(paegIndex.value, Commentstatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -145,7 +154,7 @@ onMounted(async () => {
     })
 })
 const ChangePageIndex = async (val: number) => {
-    await admin.getCommentByStatus(val, Commentstatus.value).then(res => {
+    await admin.getCommentByStatus(val, Commentstatus.value?.id as number).then(res => {
         if (res.code == 200) {
             ElMessage.success(res.message)
             InfoList.value = res.data
@@ -153,7 +162,7 @@ const ChangePageIndex = async (val: number) => {
                 name: 'admincomment',
                 params: {
                     pageIndex: val,
-                    status: Commentstatus.value
+                    status: Commentstatus.value?.id
                 }
             })
         }

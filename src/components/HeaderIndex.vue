@@ -61,7 +61,7 @@
     
 <script lang='ts' setup>
 import type { UserDTO } from '@/controller';
-import { PictureClient, UserClient } from '@/controller'
+import { UserClient } from '@/controller'
 import { People, Globe, Mail, SunOne, Moon, Sun } from '@icon-park/vue-next'
 import { useRouter } from 'vue-router'
 import { toggleDark } from '@/UseDark'
@@ -82,20 +82,16 @@ const usedark = () => {
 }
 const isChickComment = ref(false)
 onMounted(() => {
-    new PictureClient().getHeader().then(res => {
+    userc.getHeader().then(res => {
         store.setUserHeaderImg(URL.createObjectURL(res.data))
-        console.log(store.userinfo.userImg);
         headimg.value = store.userinfo.userImg
     }).catch((err) => {
-        console.log(err);
-
-        // Router.replace('/')
+        Router.replace('/')
     })
     userc.getCommentChick().then(res => {
         isChickComment.value = res.data
     })
     const doc = document.getElementById('Onlyhtml');
-    console.log(doc?.classList);
     if (doc?.classList.contains('dark'))
         isdark.value = false
     else

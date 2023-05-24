@@ -58,8 +58,6 @@ onBeforeMount(async () => {
     group.value.forEach(async item => {
         item.facepic = URL.createObjectURL((await picclient.getTheardPic(item.groupId)).data)
     })
-    console.log(group.value);
-
 })
 const picname = ref('')
 const pluspic = () => {

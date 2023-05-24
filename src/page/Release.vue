@@ -39,8 +39,8 @@
                         <v-md-preview class="textdiv" :text="a.detail" height="80%"></v-md-preview>
                     </div>
                 </el-card>
-                <el-pagination layout="prev, pager, next" :total="page.total" :page-size="page.pageSize"
-                    :hide-on-single-page="false" />
+                <el-pagination v-if="showDrawer" layout="prev, pager, next" :total="page.total" :page-size="page.pageSize"
+                    :hide-on-single-page="false" :page-count="page.pageindex" />
 
             </div>
         </el-drawer>
@@ -96,7 +96,6 @@ const selecttag = (item: TagDTO | any) => {
         id: item.id,
         tagName: item.tagName
     })
-    console.log(tags.value);
 }
 const savetag = () => {
     articleInfo.tags = tags.value
@@ -127,9 +126,8 @@ const UploadImage = async (event: any, insertImage: any, files: (string | Blob)[
     const formData = new FormData();
     formData.append('files', files[0]);
     const res = await pic.upLoadArticleImg(formData);
-    console.log(res);
     insertImage({
-        url: 'http://10.40.77.188:32770/api/Picture/GetByPicName/' + res.data,
+        url: 'http://127.0.0.1:32770/api/Picture/GetByPicName/' + res.data,
         width: 'auto',
         height: 'auto',
     })
@@ -187,7 +185,6 @@ const GetArticle = async () => {
     const res = await art.getPersonalArticle(page.pageindex as number)
     page.data = res.data.data
     TotlePage.value = (page.total as number) / (page.pageSize as number)
-    console.log(articleInfo.id);
     showDrawer.value = true;
 
 }
@@ -206,7 +203,6 @@ const select = (a: ArticleDTO) => {
     showDrawer.value = false;
     articleInfo.tags = a.tags
     tags.value = JSON.parse(JSON.stringify(articleInfo.tags)) as TagInfo[];
-    console.log(articleInfo.id);
 }
 onBeforeMount(async () => {
     if ((route.params.id as unknown as number) == 0)

@@ -15,7 +15,7 @@ export const SignalR = defineStore('signalr', {
             this.conn = new signalr.HubConnectionBuilder().withUrl('http://127.0.0.1:32770/chathub',
                 {
                     headers: {
-                        'Authorization': localStorage.getItem('MyBlogJwt') as string
+                        Authorization: (localStorage.getItem('MyBlogJwt') as string).split(' ')[1]
                     },
                     accessTokenFactory: () => localStorage.getItem('MyBlogJwt') as string
                 }).withAutomaticReconnect().configureLogging(signalr.LogLevel.Information).build();

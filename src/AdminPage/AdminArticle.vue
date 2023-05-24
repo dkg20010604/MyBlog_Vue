@@ -1,7 +1,7 @@
 <template>
     <div style="padding: 20px;">
-        <el-select v-model="articleStatus" @change="GetData(1, articleStatus)">
-            <el-option v-for="item in type" :key="item.key" :label="item.name" :value="item.key">
+        <el-select v-model="articleStatus" value-key="id" @change="GetData(1, articleStatus?.id as number)">
+            <el-option v-for="item in type" :key="item.id" :label="item.label" :value="item">
             </el-option>
         </el-select>
 
@@ -46,40 +46,40 @@ const log = new LoginClient()
 const admin = new AdminClient()
 const route = useRoute()
 const router = useRouter()
-const pageindex = ref(route.params.pageIndex as unknown as number)
+const pageindex = ref((route.params.pageIndex as unknown as number) + 1 - 1)
 const ListInfo = ref<PageDataOfArticleDTO>({
     pageindex: 0,
     pageSize: 0,
     total: 0,
     data: undefined
 })
-const articleStatus = ref(3)
+const articleStatus = ref<Usertype>()
 interface Usertype {
-    key: number,
-    name: string
+    id: number,
+    label: string
 }
 const type = reactive<Usertype[]>([
     {
-        key: 3,
-        name: '全部'
+        id: 3,
+        label: '全部'
     },
     {
-        key: 0,
-        name: '正常'
+        id: 0,
+        label: '正常'
     },
     {
-        key: 1,
-        name: '待删除'
+        id: 1,
+        label: '待删除'
     },
     {
-        key: 2,
-        name: '已删除'
+        id: 2,
+        label: '已删除'
     },
 
 ])
 onMounted(async () => {
+    articleStatus.value = type.find(a => a.id == route.params.articleStatus as unknown as number)
     await GetData(route.params.pageIndex as unknown as number, route.params.articleStatus as unknown as number);
-    articleStatus.value = route.params.articleStatus as unknown as number
 })
 const GetData = async (pageindex: number, status: number) => {
     await admin.getArticleByType(pageindex, status).then(res => {
@@ -93,7 +93,7 @@ const GetData = async (pageindex: number, status: number) => {
                     articleStatus: status
                 }
             })
-            articleStatus.value = status
+            articleStatus.value = type.find(a => a.id == status)
         }
         else {
             ElMessage.error(res.message)
@@ -109,7 +109,7 @@ onBeforeMount(async () => {
     })
 })
 const changePage = async (val: number) => {
-    await GetData(val, articleStatus.value)
+    await GetData(val, articleStatus.value?.id as number)
 }
 const changeArticleStatus = async (id: number, status: number) => {
     await admin.setArticleStatus(id, status).then(res => {

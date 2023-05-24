@@ -8,7 +8,12 @@ export const MenuIndex = defineStore("MenuIndex", {
       userinfo: reactive<UserDTO>({
         id: 0,
         nickName: '',
-        userImg: ''
+        userImg: '',
+        account: '',
+        inyro: undefined,
+        fans: 0,
+        address: '',
+        jwt: undefined
       }),
     }
   },
